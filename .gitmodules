@@ -1,0 +1,6 @@
+[submodule "module/playground"]
+	path = module/playground
+	url = https://github.com/akashic-games/playground.git
+[submodule "module/namagame-converter-ffmpeg.wasm"]
+	path = module/namagame-converter-ffmpeg.wasm
+	url = https://github.com/akashic-games/namagame-converter-ffmpeg.wasm.git

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<title>tkoolmv-namagame-converter</title>
+
+<style>
+html {
+	font-family: BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+	color: #444;
+}
+
+main {
+	padding: 0 1rem;
+}
+
+.abstract {
+	font-size: 0.9rem;
+	color: gray;
+}
+
+.converter {
+	display: flex;
+	flex-flow: row nowrap;
+	align-items: center;
+	gap: 1rem;
+}
+
+#drop_zone {
+	flex: 1 1 0;
+	box-sizing: border-box;
+	height: 100%;
+	color: #aaa;
+	border: 1px dashed gray;
+	padding: 1rem;
+	width: auto;
+	height: 200px;
+}
+
+.btn-act {
+	display: block;
+	margin: 0.5rem 0 0.5rem auto;
+	padding: 0.5rem 2rem;
+	background: #45b;
+	border-width: 0;
+	border-radius: 7px;
+	color: #eee;
+	font-weight: bold;
+}
+.btn-act:hover {
+	background-color: #67c;
+}
+.btn-act:active {
+	background-color: #228;
+}
+.btn-act:disabled {
+	background-color: #bbc;
+	user-select: none;
+}
+
+.btn-list {
+	display: flex;
+	flex-flow: column;
+	justify-content: space-around;
+}
+
+#error_message_area { 
+	color: #f00
+}
+
+</style>
+
+<main>
+	<h1>RPG ツクール MV ニコ生ゲーム化コンバーター</h1>
+	<p class="abstract">
+		『RPGツクールMV』で作成されたゲームをニコ生ゲームに変換するツールです。<br>
+		ダウンロードボタンでzip化されたニコ生ゲームをダウンロードできます。
+	</p>
+	<div id="error_message_area"></div>
+	<div class="converter">
+		<div id="drop_zone">
+			<div id="message_container">
+				<p id="message_area">ここに ツクールMVゲームの配布用ファイルをドラッグ＆ドロップしてください。</p>
+				<div id="progress_message"></div><progress id="convert_progress" value="0" style="height:3rem;" hidden></progress>
+			</div>
+		</div>
+		<div class="btn-list">
+			<button class="btn-act" id="link" disabled>ゲームページ</button>
+			<button class="btn-act" id="download" disabled>ダウンロード</button>
+			<button class="btn-act" id="reset" disabled>リセット</button>
+		</div>
+	</div>
+	<h2>使い方</h2>
+	以下のように生成したツクールMVゲームの配布用ファイルをドラッグ＆ドロップしてニコ生ゲームに変換されるのを待ちます。変換完了後、「ダウンロード」ボタンで変換されたニコ生ゲームをダウンロードします。
+	<ol>
+		<li>ツクールMVの「ファイル」メニューの「デプロイメント」を選択</li>
+		<li>プラットフォームを「ウェブブラウザ」、オプションの「未使用ファイルを含まない」を選択</li>
+		<li>出力先を選んで「OK」ボタンを押す</li>
+	</ol>
+	<p><img src="./img/deploy-tkoolgame.png" alt="ツクールMVゲームデプロイ"></p>
+	<script src="../../node_modules/@ffmpeg/ffmpeg/dist/umd/ffmpeg.js"></script>
+	<script src="../../node_modules/@ffmpeg/util/dist/umd/index.js"></script>
+	<script src="./renderer.ts"></script>
+</main>
+.

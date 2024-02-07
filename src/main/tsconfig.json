@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["dom"],
+    "declaration": false,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "outDir": "../../lib/main",
+    "alwaysStrict": true,
+    "downlevelIteration": true
+  },
+  "include": [
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "./__tests__/**/*.ts"
+  ]
+}

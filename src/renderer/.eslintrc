@@ -1,0 +1,13 @@
+{
+    "extends": [
+        "@akashic/eslint-config",
+        "prettier"
+    ],
+    "plugins": [
+        "prettier",
+        "html"
+    ],
+    "ignorePatterns": [
+        "img"
+    ]
+}

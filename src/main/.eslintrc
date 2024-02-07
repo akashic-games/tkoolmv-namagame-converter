@@ -1,0 +1,18 @@
+{
+    "extends": [
+        "@akashic/eslint-config",
+        "prettier"
+    ],
+    "plugins": [
+        "prettier"
+    ],
+    "parserOptions": {
+        "project": "src/main/tsconfig.json",
+        "sourceType": "module"
+    },
+    "ignorePatterns": [
+        "**/*.js",
+        "**/*.d.ts",
+        "**/*.html"
+    ]
+}
