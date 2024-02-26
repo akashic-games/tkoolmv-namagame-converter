@@ -111,10 +111,10 @@ async function modifyGameJson(gameJsonPath: string, plugins: TkoolmvPlugin[]): P
 	const durationMap: { [path: string]: { ext: string; duration: number } } = {};
 	const extMap: { [key: string]: Set<string> } = {};
 	await runInDirectory(audioDirPath, async filePath => {
-		const extname = path.extname(filePath);
-		if (extname !== ".ogg" && extname !== ".m4a") {
+		if (!isSupportedAudioType(filePath)) {
 			return;
 		}
+		const extname = path.extname(filePath);
 		const assetPath = path.relative(baseDirPath, filePath).replace(extname, "").replace(/\\/g, "/");
 		if (!extMap[assetPath]) {
 			extMap[assetPath] = new Set<string>();
@@ -186,7 +186,7 @@ async function modifyGameJson(gameJsonPath: string, plugins: TkoolmvPlugin[]): P
 		send: "0"
 	};
 	gameJson.environment["akashic-runtime"] = {
-		version: "~3.7.10-0",
+		version: "~3.7.16-0",
 		flavor: "-canvas"
 	};
 	plugins.forEach(p => {
@@ -205,6 +205,12 @@ async function modifyGameJson(gameJsonPath: string, plugins: TkoolmvPlugin[]): P
 	// game.jsonに100KB制限があるため、あえて改行やインデントを削除
 	// TODO: この対応でも100kBを超える可能性はあるので、ライブラリ等使用してちゃんとminifyすべき
 	fs.writeFileSync(gameJsonPath, JSON.stringify(gameJson));
+}
+
+const supportedAudioTypes = [".ogg", ".m4a"];
+
+function isSupportedAudioType(filepath: string): boolean {
+	return supportedAudioTypes.includes(path.extname(filepath));
 }
 
 async function getAudioDurationInSeconds(filepath: string): Promise<number> {
@@ -265,6 +271,10 @@ export function getAudioData(gameSrcDirPath: string, baseUrl: string, audioBaseD
 	for (const dirName of audioDirNames) {
 		const fileNames = fs.readdirSync(path.join(gameSrcDirPath, "www/audio", dirName));
 		for (const name of fileNames) {
+			// 非サポート形式のファイルは含めない
+			if (!isSupportedAudioType(name)) {
+				continue;
+			}
 			const filePath = path.join(gameSrcDirPath, "www/audio", dirName, name);
 			shell.cp("-Rf", filePath, path.join(audioBaseDir, `${dirName}_${name}`));
 			audioData.push({

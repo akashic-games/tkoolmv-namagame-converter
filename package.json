@@ -1,6 +1,6 @@
 {
   "name": "tkoolmv-namagame-converter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ツクールMVコンテンツをニコ生ゲームに変換するアプリの試作版",
   "main": "lib/main/main.js",
   "targets": {
@@ -55,7 +55,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@akashic/tkoolmv-namagame-kit": "^1.1.3",
+    "@akashic/tkoolmv-namagame-kit": "^1.2.4",
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
     "adm-zip": "^0.5.10",
