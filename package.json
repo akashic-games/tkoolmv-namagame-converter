@@ -23,8 +23,11 @@
     "format": "npm run format:prettier && npm run format:eslint",
     "format:prettier": "prettier --write \"src/**/*.ts\" --config prettier.config.json",
     "format:eslint": "eslint -c src/main/.eslintrc \"src/main/**/*.ts\" --fix && eslint -c src/renderer/.eslintrc \"src/renderer/**/*\" --fix",
+    "release:win": "npm run build-exec:win && npm run code-signing && npm run upload",
     "build-exec:win": "electron-builder --win --x64 --publish never",
-    "build-exec:mac": "electron-builder --mac --x64 --publish never"
+    "build-exec:mac": "electron-builder --mac --x64 --publish never",
+    "code-signing": "node build/codeSigning.js",
+    "upload": "node build/uploadToGithubReleases.js"
   },
   "author": "DWANGO Co., Ltd.",
   "license": "MIT",
