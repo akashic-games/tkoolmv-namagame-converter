@@ -1,8 +1,7 @@
 // tkoolmv-namagame-converter リポジトリの Github Releases に生成物をアップロードするスクリプト
 // このスクリプトを実行するために実行環境では以下を満たしている必要があります
 // - Github CLI をインストール済みであること
-// 
-// このスクリプトでは Github CLI を利用するので、環境変数 GITHUB_CLI_TOKEN に Github トークンを設定する必要がある
+// - 環境変数 GITHUB_CLI_TOKEN に Github トークンを設定していること
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
