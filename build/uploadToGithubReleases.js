@@ -23,7 +23,7 @@ const targetFilePaths = [`${name} Setup ${version}.exe`, `${name} Setup ${versio
 
 // Releases に書き込む内容をCHANGELOGから抽出
 const changelog = fs.readFileSync(path.resolve(__dirname, "..", "CHANGELOG.md")).toString();
-const matches = changelog.match(new RegExp(`## ${version}(.*?)(?=## \\d|\\Z)`, 'gs'));
+const matches = changelog.match(new RegExp(`## ${version}(.*?)(?=## \\d|\\Z)`, "gs"));
 const tmpChangelogPath = path.join(os.tmpdir(), `changelog-${Date.now()}.md`);
 // 内容に改行を含む場合、オプションで直接文章を渡すと Releases に全て書き込めないことがあるので、ファイルにしておく
 fs.writeFileSync(tmpChangelogPath, matches[0].replace(`## ${version}`, '').trim());
