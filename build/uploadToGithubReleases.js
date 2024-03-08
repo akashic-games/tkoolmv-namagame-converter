@@ -6,6 +6,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const sh = require("shelljs");
+const crypto = require("crypto");
 
 const distDirPath = path.resolve(__dirname, "..", "dist");
 const packageJson = require(path.resolve(__dirname, "..", "package.json"));
@@ -13,10 +14,22 @@ const packageJson = require(path.resolve(__dirname, "..", "package.json"));
 const version = packageJson["version"];
 const name = packageJson["name"];
 // latest.ymlが指定するファイル名に合わせてリネーム
-sh.rm("-Rf", path.join(distDirPath, `${name}-Setup-${version}.exe`));
-sh.rm("-Rf", path.join(distDirPath, `${name}-Setup-${version}.exe.blockmap`));
-sh.mv(path.join(distDirPath, `${name} Setup ${version}.exe`), path.join(distDirPath, `${name}-Setup-${version}.exe`));
-sh.mv(path.join(distDirPath, `${name} Setup ${version}.exe.blockmap`), path.join(distDirPath, `${name}-Setup-${version}.exe.blockmap`));
+if (fs.existsSync(path.join(distDirPath, `${name} Setup ${version}.exe`))) {
+	sh.rm("-Rf", path.join(distDirPath, `${name}-Setup-${version}.exe`));
+	sh.mv(path.join(distDirPath, `${name} Setup ${version}.exe`), path.join(distDirPath, `${name}-Setup-${version}.exe`));
+}
+if (fs.existsSync(path.join(distDirPath, `${name} Setup ${version}.exe.blockmap`))) {
+	sh.rm("-Rf", path.join(distDirPath, `${name}-Setup-${version}.exe.blockmap`));
+	sh.mv(path.join(distDirPath, `${name} Setup ${version}.exe.blockmap`), path.join(distDirPath, `${name}-Setup-${version}.exe.blockmap`));
+}
+// exeファイルをコード署名した影響でハッシュ値が変わってしまっているので、latest.ymlに書かれているハッシュ値を現在のものに書き換える必要がある
+const sha512Hash = crypto.createHash("sha512");
+const binary = fs.readFileSync(path.join(distDirPath, `${name}-Setup-${version}.exe`));
+sha512Hash.update(binary);
+const hashValue = sha512Hash.digest("base64");
+const latestInfo = fs.readFileSync(path.join(distDirPath, "latest.yml")).toString();
+fs.writeFileSync(path.join(distDirPath, "latest.yml"), latestInfo.replace(/sha512: .+/g, `sha512: ${hashValue}`));
+
 const targetFilePaths = [`${name}-Setup-${version}.exe`, `${name}-Setup-${version}.exe.blockmap`, "latest.yml"].map(name => {
 	const filePath = path.join(distDirPath, name);
 	if (!fs.existsSync(filePath)) {
