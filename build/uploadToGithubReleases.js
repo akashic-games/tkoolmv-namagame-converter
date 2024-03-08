@@ -12,7 +12,12 @@ const packageJson = require(path.resolve(__dirname, "..", "package.json"));
 
 const version = packageJson["version"];
 const name = packageJson["name"];
-const targetFilePaths = [`${name} Setup ${version}.exe`, `${name} Setup ${version}.exe.blockmap`, "latest.yml"].map(name => {
+// latest.ymlが指定するファイル名に合わせてリネーム
+sh.rm("-Rf", path.join(distDirPath, `${name}-Setup-${version}.exe`));
+sh.rm("-Rf", path.join(distDirPath, `${name}-Setup-${version}.exe.blockmap`));
+sh.mv(path.join(distDirPath, `${name} Setup ${version}.exe`), path.join(distDirPath, `${name}-Setup-${version}.exe`));
+sh.mv(path.join(distDirPath, `${name} Setup ${version}.exe.blockmap`), path.join(distDirPath, `${name}-Setup-${version}.exe.blockmap`));
+const targetFilePaths = [`${name}-Setup-${version}.exe`, `${name}-Setup-${version}.exe.blockmap`, "latest.yml"].map(name => {
 	const filePath = path.join(distDirPath, name);
 	if (!fs.existsSync(filePath)) {
 		console.error(`Not Found: ${filePath}`);
