@@ -22,7 +22,8 @@ if (fs.existsSync(path.join(distDirPath, `${name} Setup ${version}.exe.blockmap`
 	sh.rm("-Rf", path.join(distDirPath, `${name}-Setup-${version}.exe.blockmap`));
 	sh.mv(path.join(distDirPath, `${name} Setup ${version}.exe.blockmap`), path.join(distDirPath, `${name}-Setup-${version}.exe.blockmap`));
 }
-// exeファイルをコード署名した影響でハッシュ値が変わってしまっているので、latest.ymlに書かれているハッシュ値を現在のものに書き換える必要がある
+// electron-builder には signtool を使って署名する方法が見当たらない
+// 後付けで signtool でコード署名した影響でハッシュ値が変わってしまっているので、自力で再計算して latest.yml に書かれているハッシュ値を書き換える必要がある
 const sha512Hash = crypto.createHash("sha512");
 const binary = fs.readFileSync(path.join(distDirPath, `${name}-Setup-${version}.exe`));
 sha512Hash.update(binary);
