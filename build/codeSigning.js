@@ -18,4 +18,10 @@ if (!fs.existsSync(targetFilePath)) {
 	process.exit(1);
 }
 
-sh.exec(`signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "${targetFilePath}"`);
+const signResult = sh.exec(`signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "${targetFilePath}"`);
+
+// コード署名に失敗した場合、後続スクリプトを停止させたいのでエラー扱いにする
+if (!signResult || signResult.code !== 0) {
+	console.error(`Could not codesign to "${targetFilePath}"`);
+	process.exit(1);
+}
