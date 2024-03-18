@@ -3,9 +3,7 @@ import * as path from "path";
 import * as admZip from "adm-zip";
 import * as sh from "shelljs";
 
-type UpdateStatus = "UPDATE" | "NONE" | "STOP";
-
-export async function updateTkoolmvNamagameKitRuntime(moduleDirPath: string): Promise<UpdateStatus> {
+export async function updateTkoolmvNamagameKitRuntime(moduleDirPath: string): Promise<void> {
 	const moduleName = "tkoolmv-namagame-kit";
 	const versionTxtPath = path.join(moduleDirPath, "version.txt");
 	const latestVersion = await getLatestVersion(moduleName);
@@ -15,20 +13,19 @@ export async function updateTkoolmvNamagameKitRuntime(moduleDirPath: string): Pr
 		}
 		await installModule(moduleName, latestVersion, `tkoolmv-namagame-kit-runtime-${latestVersion}.zip`, moduleDirPath);
 		fs.writeFileSync(versionTxtPath, latestVersion);
-		return "UPDATE";
+		return;
 	}
 	const currentVersion = fs.readFileSync(versionTxtPath).toString().trim();
 	if (currentVersion !== latestVersion) {
 		const current = currentVersion.split(".");
 		const latest = latestVersion.split(".");
 		if (current[0] !== latest[0]) {
-			return "STOP";
+			return;
 		}
 		await installModule(moduleName, latestVersion, `tkoolmv-namagame-kit-runtime-${latestVersion}.zip`, moduleDirPath);
 		fs.writeFileSync(versionTxtPath, latestVersion);
-		return "UPDATE";
+		return;
 	}
-	return "NONE";
 }
 
 async function getLatestVersion(moduleName: string): Promise<string> {

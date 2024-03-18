@@ -3,11 +3,16 @@
         "@akashic/eslint-config",
         "prettier"
     ],
+    "parserOptions": {
+        "project": "src/renderer/tsconfig.eslint.json",
+        "sourceType": "module"
+    },
     "plugins": [
         "prettier",
         "html"
     ],
     "ignorePatterns": [
-        "img"
+        "img",
+        "*.json"
     ]
 }

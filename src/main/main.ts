@@ -26,6 +26,8 @@ async function createWindow(): Promise<void> {
 	// リンクをクリックすると標準のWebブラウザで開くように
 	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
 		if (/^https?:/.test(url)) {
+			// 他の処理に影響を与えず、awaitは必要ない処理なので、lint エラーを抑止
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			shell.openExternal(url);
 		}
 		return { action: "deny" };
@@ -39,21 +41,9 @@ async function updateModule(): Promise<void> {
 		if (!fs.existsSync(runtimeDirPath)) {
 			fs.mkdirSync(runtimeDirPath, { recursive: true });
 		}
-		const status = await updateTkoolmvNamagameKitRuntime(runtimeDirPath);
-		if (status === "STOP") {
-			dialog.showMessageBox({
-				type: "info",
-				message: "@akashic/tkoolmv-namagame-kitのメジャーバージョンが更新されたため、アップデートを停止しています",
-				buttons: ["OK"]
-			});
-		}
+		await updateTkoolmvNamagameKitRuntime(runtimeDirPath);
 	} catch (e) {
 		console.error(e);
-		dialog.showMessageBox({
-			type: "error",
-			message: "@akashic/tkoolmv-namagame-kitのアップデートに失敗しました",
-			buttons: ["OK"]
-		});
 	}
 }
 
@@ -65,6 +55,8 @@ const audioBaseDirPath: string = fs.mkdtempSync(path.join(os.tmpdir(), "audio"))
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
+// 他の処理に影響を与えず、awaitは必要ない処理なので、lint エラーを抑止
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 app.whenReady().then(async () => {
 	// アップデートをチェック
 	await autoUpdater.checkForUpdates();
