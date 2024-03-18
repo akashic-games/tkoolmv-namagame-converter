@@ -5,13 +5,8 @@ import * as musicMetaData from "music-metadata";
 import * as sharp from "sharp";
 import * as shell from "shelljs";
 import { mp4Inspector } from "thumbcoil";
-
-interface TkoolmvPlugin {
-	name: string;
-	status: boolean;
-	description: string;
-	parameters: any;
-}
+import type { TkoolmvPlugin } from "../typings/tkoolmvPlugin";
+import { convertPlugins } from "./convertPlugins";
 
 export async function getAssetsSize(gameSrcDirPath: string): Promise<number> {
 	validateGameSrcDir(gameSrcDirPath);
@@ -53,6 +48,7 @@ export async function convertTkoolmv(gameBaseDirPath: string, gameSrcDirPath: st
 	const tkoolmvKitDirPath = path.resolve(__dirname, "../../runtime");
 	copyGameElements(gameSrcDirPath, gameDistDirPath, tkoolmvKitDirPath);
 	const plugins: TkoolmvPlugin[] = extractPlugins(path.join(gameSrcDirPath, "www/js/plugins.js"));
+	convertPlugins(plugins, path.join(gameSrcDirPath, "www/js/plugins"), path.join(gameDistDirPath, "script/tkool/plugins"));
 	await modifyGameJson(path.join(gameDistDirPath, "game.json"), plugins);
 	modifyPluginsJson(path.join(gameDistDirPath, "text/Plugins.json"), plugins);
 	await compressImageAssets(gameSrcDirPath, gameDistDirPath);
@@ -66,7 +62,7 @@ function validateGameSrcDir(dirPath: string): void {
 		throw new Error(`Not found www directory: ${baseDirPath}`);
 	}
 	// 変換時に参照されるファイル・ディレクトリがwww下にあるか確認
-	const notExists = ["audio", "img", "data", "js/plugins.js"].filter(p => !fs.existsSync(path.join(baseDirPath, p)));
+	const notExists = ["audio", "img", "data", "js/plugins.js", "js/plugins"].filter(p => !fs.existsSync(path.join(baseDirPath, p)));
 	if (notExists.length > 0) {
 		throw new Error(`Not found asset files: ${notExists.join(", ")}`);
 	}
@@ -107,6 +103,7 @@ async function modifyGameJson(gameJsonPath: string, plugins: TkoolmvPlugin[]): P
 	const audioDirPath = path.join(baseDirPath, "assets", "audio");
 	const imgDirPath = path.join(baseDirPath, "assets", "img");
 	const textDirPath = path.join(baseDirPath, "text");
+	const pluginScriptDirPath = path.join(baseDirPath, "script", "tkool", "plugins");
 	const assets = gameJson.assets;
 	const durationMap: { [path: string]: { ext: string; duration: number } } = {};
 	const extMap: { [key: string]: Set<string> } = {};
@@ -168,7 +165,18 @@ async function modifyGameJson(gameJsonPath: string, plugins: TkoolmvPlugin[]): P
 			// TODO: キット側でアセットパスから検索できるようにして、ここのアセット名も game.json からの相対パスにすべき
 			assets[path.basename(filePath).replace(".json", "")] = {
 				type: "text",
-				path: path.relative(baseDirPath, filePath),
+				path: path.relative(baseDirPath, filePath).replace(/\\/g, "/"),
+				global: true
+			};
+		}
+	});
+	// プラグインスクリプトは動的に追加される可能性がある
+	await runInDirectory(pluginScriptDirPath, async filePath => {
+		const name = path.basename(filePath).replace(".js", "");
+		if (path.extname(filePath) === ".js" && !assets[name]) {
+			assets[name] = {
+				type: "script",
+				path: path.relative(baseDirPath, filePath).replace(/\\/g, "/"),
 				global: true
 			};
 		}
@@ -229,9 +237,7 @@ async function getAudioDurationInSeconds(filepath: string): Promise<number> {
 }
 
 function modifyPluginsJson(pluginsJsonPath: string, plugins: TkoolmvPlugin[]): void {
-	const necessaryPluginNames = ["AkashicRankingMode", "Community_Basic", "PictureCallCommon", "DTextPicture"];
-	const necessaryPlugins = plugins.filter(p => necessaryPluginNames.includes(p.name));
-	fs.writeFileSync(pluginsJsonPath, JSON.stringify(necessaryPlugins, null, 2));
+	fs.writeFileSync(pluginsJsonPath, JSON.stringify(plugins, null, 2));
 }
 
 async function compressImageAssets(gameSrcDirPath: string, gameDistDirPath: string): Promise<void> {
