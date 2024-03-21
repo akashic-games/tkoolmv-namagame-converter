@@ -5,8 +5,8 @@ import * as musicMetaData from "music-metadata";
 import * as sharp from "sharp";
 import * as shell from "shelljs";
 import { mp4Inspector } from "thumbcoil";
-import type { TkoolmvPlugin } from "../typings/tkoolmvPlugin";
 import { convertPlugins } from "./convertPlugins";
+import type { TkoolmvPlugin } from "./tkoolmvPlugin";
 
 export async function getAssetsSize(gameSrcDirPath: string): Promise<number> {
 	validateGameSrcDir(gameSrcDirPath);

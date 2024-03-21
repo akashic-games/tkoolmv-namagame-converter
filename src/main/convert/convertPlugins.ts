@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as acorn from "acorn";
 import * as escodegen from "escodegen";
-import type { TkoolmvPlugin } from "../typings/tkoolmvPlugin";
+import type { TkoolmvPlugin } from "./tkoolmvPlugin";
 
 const TARGET_OBJECT_NAMES = [
 	"DataManager",
