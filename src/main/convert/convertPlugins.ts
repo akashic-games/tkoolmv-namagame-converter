@@ -195,9 +195,9 @@ export function modifyPluginsJs(src: string): string {
 		modifiedJsonString = modifiedJsonString.replace(new RegExp(`"\\${name}"`, "g"), `"DataManager_1.${name}"`);
 	});
 	const modifiedAst = JSON.parse(modifiedJsonString);
-	let modifiedSrc = escodegen.generate(modifiedAst)
+	let modifiedSrc = escodegen.generate(modifiedAst);
 	// キットで定義したクラスに直接代入はできないため、Object.assign()に書き換え
-	modifiedSrc = modifiedSrc.replace(new RegExp("(tkool_1\.[0-9a-zA-Z\_\$]+) *= *([0-9a-zA-Z\_\$\.]+);?", "g"), "Object.assign($1, $2);");
+	modifiedSrc = modifiedSrc.replace(new RegExp("(tkool_1.[0-9a-zA-Z_$]+) *= *([0-9a-zA-Z_$.]+);?", "g"), "Object.assign($1, $2);");
 	return `Object.defineProperty(exports, "__esModule", { value: true });
 var tkool_1 = require("../");
 var DataManager_1 = require("../managers/DataManager");

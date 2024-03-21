@@ -39,7 +39,9 @@ async function runInDirectory(dirPath: string, run: (filePath: string) => Promis
 	}
 }
 
-export async function convertTkoolmv(gameBaseDirPath: string, gameSrcDirPath: string): Promise<string> {
+const NECESSARY_PLUGIN_NAMES = ["AkashicRankingMode", "Community_Basic", "PictureCallCommon", "DTextPicture"];
+
+export async function convertTkoolmv(gameBaseDirPath: string, gameSrcDirPath: string, usePluginConverter: boolean): Promise<string> {
 	if (!fs.existsSync(gameBaseDirPath)) {
 		throw new Error(`Not found base directory: ${gameBaseDirPath}`);
 	}
@@ -47,8 +49,12 @@ export async function convertTkoolmv(gameBaseDirPath: string, gameSrcDirPath: st
 	const gameDistDirPath = fs.mkdtempSync(path.join(gameBaseDirPath, "namagame"));
 	const tkoolmvKitDirPath = path.resolve(__dirname, "../../runtime");
 	copyGameElements(gameSrcDirPath, gameDistDirPath, tkoolmvKitDirPath);
-	const plugins: TkoolmvPlugin[] = extractPlugins(path.join(gameSrcDirPath, "www/js/plugins.js"));
-	convertPlugins(plugins, path.join(gameSrcDirPath, "www/js/plugins"), path.join(gameDistDirPath, "script/tkool/plugins"));
+	let plugins: TkoolmvPlugin[] = extractPlugins(path.join(gameSrcDirPath, "www/js/plugins.js"));
+	if (usePluginConverter) {
+		convertPlugins(plugins, path.join(gameSrcDirPath, "www/js/plugins"), path.join(gameDistDirPath, "script/tkool/plugins"));
+	} else {
+		plugins = plugins.filter(p => NECESSARY_PLUGIN_NAMES.includes(p.name));
+	}
 	await modifyGameJson(path.join(gameDistDirPath, "game.json"), plugins);
 	modifyPluginsJson(path.join(gameDistDirPath, "text/Plugins.json"), plugins);
 	await compressImageAssets(gameSrcDirPath, gameDistDirPath);
