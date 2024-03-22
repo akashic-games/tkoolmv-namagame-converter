@@ -9,8 +9,9 @@ import { getAssetsSize, convertTkoolmv, getAudioData, setAudioBinary } from "./c
 import type { PlaygroundServer } from "./playground/createServer";
 import { createPlaygroundServer, getGameContentUrl } from "./playground/createServer";
 import { createZip } from "./util/createZip";
+import { updateTkoolmvNamagameKitRuntime } from "./util/updateTkoolmvNamagameKitRuntime";
 
-function createWindow(): void {
+async function createWindow(): Promise<void> {
 	// Create the browser window.
 	const mainWindow = new BrowserWindow({
 		width: 1200,
@@ -21,14 +22,29 @@ function createWindow(): void {
 		}
 	});
 	// and load the index.html of the app.
-	mainWindow.loadFile(path.resolve(__dirname, "../renderer/index.html"));
+	await mainWindow.loadFile(path.resolve(__dirname, "../renderer/index.html"));
 	// リンクをクリックすると標準のWebブラウザで開くように
 	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
 		if (/^https?:/.test(url)) {
+			// 他の処理に影響を与えず、awaitは必要ない処理なので、lint エラーを抑止
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			shell.openExternal(url);
 		}
 		return { action: "deny" };
 	});
+}
+
+const cacheDirPath: string = path.join(os.tmpdir(), ".converter-cache");
+const runtimeDirPath: string = path.join(cacheDirPath, "runtime");
+async function updateModule(): Promise<void> {
+	try {
+		if (!fs.existsSync(runtimeDirPath)) {
+			fs.mkdirSync(runtimeDirPath, { recursive: true });
+		}
+		await updateTkoolmvNamagameKitRuntime(runtimeDirPath);
+	} catch (e) {
+		console.error(e);
+	}
 }
 
 let playgroundServer: PlaygroundServer | null = null;
@@ -39,15 +55,20 @@ const audioBaseDirPath: string = fs.mkdtempSync(path.join(os.tmpdir(), "audio"))
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+// 他の処理に影響を与えず、awaitは必要ない処理なので、lint エラーを抑止
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+app.whenReady().then(async () => {
 	// アップデートをチェック
-	autoUpdater.checkForUpdates();
-	createWindow();
+	await autoUpdater.checkForUpdates();
+	await createWindow();
+	await updateModule();
 	playgroundServer = createPlaygroundServer(gameBaseDirPath, audioBaseDirPath);
-	app.on("activate", () => {
+	app.on("activate", async () => {
 		// On macOS it"s common to re-create a window in the app when the
 		// dock icon is clicked and there are no other windows open.
-		if (BrowserWindow.getAllWindows().length === 0) createWindow();
+		if (BrowserWindow.getAllWindows().length === 0) {
+			await createWindow();
+		}
 	});
 });
 
@@ -56,7 +77,7 @@ ipcMain.handle("get-assets-size", async (_event, dirPath) => {
 });
 
 ipcMain.handle("generate-nama-game-dir", async (_event, dirPath) => {
-	return await convertTkoolmv(gameBaseDirPath, dirPath);
+	return await convertTkoolmv(gameBaseDirPath, dirPath, path.join(runtimeDirPath, "tkoolmv-namagame-kit"));
 });
 
 ipcMain.handle("get-audio-data", (_event, dirPath) => {
@@ -99,6 +120,7 @@ app.on("window-all-closed", () => {
 	if (process.platform !== "darwin") app.quit();
 	playgroundServer!.server.close();
 	sh.rm("-Rf", gameBaseDirPath);
+	sh.rm("-Rf", audioBaseDirPath);
 });
 
 // In this file you can include the rest of your app"s specific main process
@@ -112,14 +134,6 @@ process.on("uncaughtException", (err: Error) => {
 // -------------------------------------------
 // 自動アップデート関連のイベント処理
 // -------------------------------------------
-// アップデートがあるとき
-autoUpdater.on("update-available", () => {
-	dialog.showMessageBox({
-		message: "アップデートがあります",
-		buttons: ["OK"]
-	});
-});
-
 // アップデートのダウンロードが完了
 autoUpdater.on("update-downloaded", async () => {
 	const returnValue = await dialog.showMessageBox({

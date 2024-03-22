@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["dom"],
+    "declaration": false,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "outDir": "../../lib/renderer",
+    "alwaysStrict": true,
+    "downlevelIteration": true
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}

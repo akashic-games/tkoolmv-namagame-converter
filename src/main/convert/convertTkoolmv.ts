@@ -44,13 +44,12 @@ async function runInDirectory(dirPath: string, run: (filePath: string) => Promis
 	}
 }
 
-export async function convertTkoolmv(gameBaseDirPath: string, gameSrcDirPath: string): Promise<string> {
+export async function convertTkoolmv(gameBaseDirPath: string, gameSrcDirPath: string, tkoolmvKitDirPath: string): Promise<string> {
 	if (!fs.existsSync(gameBaseDirPath)) {
 		throw new Error(`Not found base directory: ${gameBaseDirPath}`);
 	}
 	validateGameSrcDir(gameSrcDirPath);
 	const gameDistDirPath = fs.mkdtempSync(path.join(gameBaseDirPath, "namagame"));
-	const tkoolmvKitDirPath = path.resolve(__dirname, "../../runtime");
 	copyGameElements(gameSrcDirPath, gameDistDirPath, tkoolmvKitDirPath);
 	const plugins: TkoolmvPlugin[] = extractPlugins(path.join(gameSrcDirPath, "www/js/plugins.js"));
 	await modifyGameJson(path.join(gameDistDirPath, "game.json"), plugins);
@@ -81,9 +80,7 @@ function copyGameElements(gameSrcDirPath: string, gameDistDirPath: string, tkool
 	shell.cp("-Rf", path.join(gameSrcDirPath, "www/img"), path.join(gameDistDirPath, "assets"));
 	shell.cp("-Rf", path.join(gameSrcDirPath, "www/data/*"), path.join(gameDistDirPath, "text"));
 	shell.cp("-Rf", path.join(tkoolmvKitDirPath, "game/script/*"), path.join(gameDistDirPath, "script"));
-	// electron-builderによってnode_modulesが削除されるため、ビルドスクリプトによって__node_modulesにリネームされている
-	// TODO: リネーム処理を不要にする
-	shell.cp("-Rf", path.join(tkoolmvKitDirPath, "game/__node_modules/*"), path.join(gameDistDirPath, "node_modules"));
+	shell.cp("-Rf", path.join(tkoolmvKitDirPath, "game/node_modules/*"), path.join(gameDistDirPath, "node_modules"));
 	shell.cp("-Rf", path.join(tkoolmvKitDirPath, "game/text/*"), path.join(gameDistDirPath, "text"));
 	shell.cp(path.join(tkoolmvKitDirPath, "game/game.json"), gameDistDirPath);
 }
