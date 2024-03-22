@@ -65,6 +65,7 @@
     "express": "^4.18.2",
     "image-size": "^1.0.2",
     "music-metadata": "^7.14.0",
+    "node-html-markdown": "^1.3.0",
     "sharp": "^0.32.6",
     "shelljs": "^0.8.5",
     "thumbcoil": "^1.2.3"
