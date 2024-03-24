@@ -10,7 +10,10 @@ import type { TkoolmvPlugin } from "./tkoolmvPlugin";
 
 export async function getAssetsSize(gameSrcDirPath: string): Promise<number> {
 	validateGameSrcDir(gameSrcDirPath);
-	const audioDirSize = await getDirectorySize(path.join(gameSrcDirPath, "www/audio"));
+	let audioDirSize = 0;
+	if (fs.existsSync(path.join(gameSrcDirPath, "www/audio"))) {
+		audioDirSize = await getDirectorySize(path.join(gameSrcDirPath, "www/audio"));
+	}
 	const imgDirSize = await getDirectorySize(path.join(gameSrcDirPath, "www/img"));
 	return audioDirSize + imgDirSize;
 }
@@ -71,7 +74,7 @@ function validateGameSrcDir(dirPath: string): void {
 		throw new Error(`Not found www directory: ${baseDirPath}`);
 	}
 	// 変換時に参照されるファイル・ディレクトリがwww下にあるか確認
-	const notExists = ["audio", "img", "data", "js/plugins.js", "js/plugins"].filter(p => !fs.existsSync(path.join(baseDirPath, p)));
+	const notExists = ["img", "data", "js/plugins.js", "js/plugins"].filter(p => !fs.existsSync(path.join(baseDirPath, p)));
 	if (notExists.length > 0) {
 		throw new Error(`Not found asset files: ${notExists.join(", ")}`);
 	}
@@ -82,7 +85,11 @@ function copyGameElements(gameSrcDirPath: string, gameDistDirPath: string, tkool
 	shell.mkdir(path.join(gameDistDirPath, "text"));
 	shell.mkdir(path.join(gameDistDirPath, "script"));
 	shell.mkdir(path.join(gameDistDirPath, "node_modules"));
-	shell.cp("-Rf", path.join(gameSrcDirPath, "www/audio"), path.join(gameDistDirPath, "assets"));
+	if (fs.existsSync(path.join(gameSrcDirPath, "www/audio"))) {
+		shell.cp("-Rf", path.join(gameSrcDirPath, "www/audio"), path.join(gameDistDirPath, "assets"));
+	} else {
+		fs.mkdirSync(path.join(gameDistDirPath, "assets", "audio"), { recursive: true });
+	}
 	shell.cp("-Rf", path.join(gameSrcDirPath, "www/img"), path.join(gameDistDirPath, "assets"));
 	shell.cp("-Rf", path.join(gameSrcDirPath, "www/data/*"), path.join(gameDistDirPath, "text"));
 	shell.cp("-Rf", path.join(tkoolmvKitDirPath, "game/script/*"), path.join(gameDistDirPath, "script"));
@@ -279,6 +286,9 @@ interface AudioDataParameter {
 
 export function getAudioData(gameSrcDirPath: string, baseUrl: string, audioBaseDir: string): AudioDataParameter[] {
 	validateGameSrcDir(gameSrcDirPath);
+	if (!fs.existsSync(path.join(gameSrcDirPath, "www/audio"))) {
+		return [];
+	}
 	const audioData: AudioDataParameter[] = [];
 	const audioDirNames = fs.readdirSync(path.join(gameSrcDirPath, "www/audio"));
 	for (const dirName of audioDirNames) {
