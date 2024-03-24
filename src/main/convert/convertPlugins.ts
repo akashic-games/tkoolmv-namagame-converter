@@ -176,13 +176,23 @@ const TARGET_VARIABLE_NAMES = [
 ];
 
 export function convertPlugins(targetPlugins: TkoolmvPlugin[], srcDir: string, distDir: string): void {
-	targetPlugins.forEach(p => {
-		if (!fs.existsSync(path.join(distDir, `${p.name}.js`))) {
+	const errorPlugins: string[] = [];
+	for (const p of targetPlugins) {
+		if (fs.existsSync(path.join(distDir, `${p.name}.js`))) {
+			continue;
+		}
+		try {
 			const pluginSrc = fs.readFileSync(path.join(srcDir, `${p.name}.js`)).toString();
 			const modifiedSrc = modifyPluginsJs(pluginSrc);
 			fs.writeFileSync(path.join(distDir, `${p.name}.js`), modifiedSrc);
+		} catch (e) {
+			console.error(e);
+			errorPlugins.push(p.name);
 		}
-	});
+	}
+	if (errorPlugins.length > 0) {
+		throw new Error(`Failed to convert following scripts: ${errorPlugins.join(", ")}`);
+	}
 }
 
 export function modifyPluginsJs(src: string): string {
