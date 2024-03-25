@@ -5,7 +5,6 @@ import type { MenuItemConstructorOptions } from "electron";
 import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from "electron";
 import * as log from "electron-log";
 import { autoUpdater } from "electron-updater";
-import { NodeHtmlMarkdown } from "node-html-markdown";
 import * as sh from "shelljs";
 import { getAssetsSize, convertTkoolmv, getAudioData, setAudioBinary } from "./convert/convertTkoolmv";
 import type { PlaygroundServer } from "./playground/createServer";
@@ -61,9 +60,8 @@ app.setAboutPanelOptions({
 	applicationName: "RPGツクールMVニコ生ゲーム化コンバーター",
 	applicationVersion: `v${packageJson.version}`,
 	copyright: "Copyright (c) 2024 DWANGO Co., Ltd.",
-	credits: `This software uses FFmpeg, a multimedia framework which is licensed under the LGPLv2.1.
-FFmpeg is a trademark of Fabrice Bellard, originator of the FFmpeg project.
-More information about FFmpeg can be found at [FFmpeg's website](https://ffmpeg.org).`,
+	credits: `This software uses libraries from the FFmpeg project under the LGPLv2.1. ref. https://www.ffmpeg.org/legal.html
+"RPGツクール" は株式会社 Gotcha Gotcha Games の登録商標です。ref. https://www.j-platpat.inpit.go.jp/c1801/TR/JP-1996-077275/40/ja`,
 	iconPath: "img/icon.png"
 });
 
@@ -160,10 +158,11 @@ process.on("uncaughtException", (err: Error) => {
 // -------------------------------------------
 // アップデートのダウンロードが完了
 autoUpdater.on("update-downloaded", async event => {
+	const releaseNoteUrl = `https://github.com/akashic-games/tkoolmv-namagame-converter/releases/tag/v${event.version}`;
 	const returnValue = await dialog.showMessageBox({
 		type: "info",
 		message: `最新バージョン(${event.version})へのアップデート`,
-		detail: `再起動してインストールできます。詳細は以下の通り\n${NodeHtmlMarkdown.translate(event.releaseNotes as string)}`,
+		detail: `再起動してインストールできます。詳細は次のURLを参照してください。${releaseNoteUrl}`,
 		buttons: ["再起動", "後で"]
 	});
 	if (returnValue.response === 0) {
