@@ -61,6 +61,7 @@ app.setAboutPanelOptions({
 	applicationVersion: `v${packageJson.version}`,
 	copyright: "Copyright (c) 2024 DWANGO Co., Ltd.",
 	credits: `This software uses libraries from the FFmpeg project under the LGPLv2.1.
+https://www.ffmpeg.org/legal.html
 "RPGツクール" は株式会社 Gotcha Gotcha Games の登録商標です。`,
 	iconPath: path.resolve(__dirname, "..", "..", "img/icon.png")
 });
