@@ -60,9 +60,9 @@ app.setAboutPanelOptions({
 	applicationName: "RPGツクールMVニコ生ゲーム化コンバーター",
 	applicationVersion: `v${packageJson.version}`,
 	copyright: "Copyright (c) 2024 DWANGO Co., Ltd.",
-	credits: `This software uses libraries from the FFmpeg project under the LGPLv2.1. ref. https://www.ffmpeg.org/legal.html
-"RPGツクール" は株式会社 Gotcha Gotcha Games の登録商標です。ref. https://www.j-platpat.inpit.go.jp/c1801/TR/JP-1996-077275/40/ja`,
-	iconPath: "img/icon.png"
+	credits: `This software uses libraries from the FFmpeg project under the LGPLv2.1.
+"RPGツクール" は株式会社 Gotcha Gotcha Games の登録商標です。`,
+	iconPath: path.resolve(__dirname, "..", "..", "img/icon.png")
 });
 
 const template: MenuItemConstructorOptions[] = [
@@ -158,14 +158,16 @@ process.on("uncaughtException", (err: Error) => {
 // -------------------------------------------
 // アップデートのダウンロードが完了
 autoUpdater.on("update-downloaded", async event => {
-	const releaseNoteUrl = `https://github.com/akashic-games/tkoolmv-namagame-converter/releases/tag/v${event.version}`;
 	const returnValue = await dialog.showMessageBox({
 		type: "info",
 		message: `最新バージョン(${event.version})へのアップデート`,
-		detail: `再起動してインストールできます。詳細は次のURLを参照してください。${releaseNoteUrl}`,
-		buttons: ["再起動", "後で"]
+		detail: `再起動してインストールできます。詳細は以下の「更新内容を確認」から参照してください。`,
+		buttons: ["再起動", "後で", "更新内容を確認"]
 	});
 	if (returnValue.response === 0) {
 		autoUpdater.quitAndInstall(); // アプリを終了してインストール
+	} else if (returnValue.response === 2) {
+		const child = new BrowserWindow({ modal: true, show: true });
+		await child.loadURL(`https://github.com/akashic-games/tkoolmv-namagame-converter/releases/tag/v${event.version}`);
 	}
 });
