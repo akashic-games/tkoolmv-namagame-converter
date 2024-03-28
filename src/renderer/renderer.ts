@@ -17,6 +17,7 @@ window.addEventListener("load", () => {
 	const link = document.getElementById("link")! as HTMLButtonElement;
 	const messageContainer = document.getElementById("message_container")!;
 	const messageArea = document.getElementById("message_area")!;
+	const usePluginConverterCheckbox = document.getElementById("use-plugin-converter")! as HTMLInputElement;
 	const progressMessage = document.getElementById("progress_message")!;
 	const convertProgress = document.getElementById("convert_progress")! as HTMLProgressElement;
 	const errorMessageArea = document.getElementById("error_message_area")!;
@@ -34,6 +35,8 @@ window.addEventListener("load", () => {
 		link.disabled = true;
 		link.value = "";
 		errorMessageArea.innerHTML = "";
+		usePluginConverterCheckbox.disabled = false;
+		usePluginConverterCheckbox.checked = false;
 	}
 
 	// 対象ディレクトリ中の全音声ファイルを圧縮する
@@ -79,6 +82,7 @@ window.addEventListener("load", () => {
 			if (isConverting || gameZip || !ev.dataTransfer?.files?.length || !ev.dataTransfer?.items?.length) return;
 			isConverting = true;
 			messageArea.innerHTML = "ニコ生ゲーム生成中です。少々お待ちください。";
+			usePluginConverterCheckbox.disabled = true;
 			errorMessageArea.innerHTML = "";
 			const gameSrcDirPath = ev.dataTransfer.files[0].path;
 			const dirSize = await (window as any).tkoolmvApi.getAssetsSize(gameSrcDirPath);
@@ -94,7 +98,7 @@ window.addEventListener("load", () => {
 				currentTime++;
 				progressMessage.innerHTML = `残り${currentTime < estTime ? estTime - currentTime : 0}秒(予想)`;
 			}, 1000);
-			gameDistDirPath = await (window as any).tkoolmvApi.generateNamaGameDir(gameSrcDirPath);
+			gameDistDirPath = await (window as any).tkoolmvApi.generateNamaGameDir(gameSrcDirPath, usePluginConverterCheckbox.checked);
 			await generateNamagameAudioAssets(gameSrcDirPath);
 			const response = await (window as any).tkoolmvApi.generateNamaGameData(gameDistDirPath);
 			dropZone.style.width = `${Math.round(response.gameJson.width * 1.2)}px`;
