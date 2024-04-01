@@ -59,8 +59,8 @@ export function modifyPluginsJs(src: string): string {
 	let modifiedSrc = src;
 	// $~ のグローバル変数には後から値が代入されるので毎回直接DataManagerから動的に値を取得する必要がある。そのため置換が必要になる
 	TARGET_VARIABLE_NAMES.forEach(name => {
-		modifiedSrc = modifiedSrc.replace(new RegExp(`\\${name}(?![0-9a-zA-Z_$])`, "g"), `DataManager_1.${name}`)
-	})
+		modifiedSrc = modifiedSrc.replace(new RegExp(`\\${name}(?![0-9a-zA-Z_$])`, "g"), `DataManager_1.${name}`);
+	});
 	return `Object.defineProperty(exports, "__esModule", { value: true });
 var tkool_1 = require("../");
 var DataManager_1 = require("../managers/DataManager");
@@ -203,7 +203,23 @@ var Window_Status = tkool_1.Window_Status;
 var Window_TitleCommand = tkool_1.Window_TitleCommand;
 var Window_SavefileList = tkool_1.Window_SavefileList;
 
-require("../../alterGlobalObjects").alterGlobalObjects();
+// ブラウザ上の他スクリプトとの衝突を避けるため、ブラウザ以外の環境もしくはiframe内部でのみ書き換えを行う
+if (typeof window === "undefined" || window.top !== window) {
+	const exts = require("../../createStandardBuiltinObjectExtensions").createStandardBuiltinObjectExtensions();
+	// 標準組み込みオブジェクトの書き換えを1度で済ませるために、追加予定の関数が定義済みでないことを確認
+	if (!Number.prototype.clamp || !Number.prototype.mod || !Number.prototype.padZero) {
+		Object.defineProperties(Number.prototype, exts.numberExtensions);
+	}
+	if (!String.prototype.format || !String.prototype.padZero || !String.prototype.contains) {
+		Object.defineProperties(String.prototype, exts.stringExtensions);
+	}
+	if (!Array.prototype.equals || !Array.prototype.clone || !Array.prototype.contains) {
+		Object.defineProperties(Array.prototype, exts.arrayExtensions);
+	}
+	if (!Math.randomInt) {
+		Object.defineProperties(Math, exts.mathExtensions);
+	}
+}
 
 ${modifiedSrc}
 `;
