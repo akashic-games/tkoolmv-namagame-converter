@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased changes
+* バージョン情報を表示できるように
+* アップデート時に 更新内容 が確認できるように
+* メニューから「Edit」を削除
+
 ## 1.0.2
 * `@akashic/tkoolmv-namagame-kit` の自動更新(マイナーバージョンまで)ができるように
 

@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { app, BrowserWindow, ipcMain, shell, dialog } from "electron";
+import type { MenuItemConstructorOptions } from "electron";
+import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from "electron";
 import * as log from "electron-log";
 import { autoUpdater } from "electron-updater";
 import * as sh from "shelljs";
@@ -51,6 +52,28 @@ let playgroundServer: PlaygroundServer | null = null;
 const gameBaseDirPath: string = fs.mkdtempSync(path.join(os.tmpdir(), "games"));
 // ffmpeg.wasmで音声を圧縮するための一時ディレクトリ
 const audioBaseDirPath: string = fs.mkdtempSync(path.join(os.tmpdir(), "audio"));
+
+// package.json の動的読み込みのため、require の lint エラーを抑止
+/* eslint-disable @typescript-eslint/no-var-requires */
+const packageJson = require(path.resolve(__dirname, "..", "..", "package.json"));
+app.setAboutPanelOptions({
+	applicationName: "RPGツクールMVニコ生ゲーム化コンバーター",
+	applicationVersion: `v${packageJson.version}`,
+	copyright: "Copyright (c) 2024 DWANGO Co., Ltd.",
+	credits: `This software uses libraries from the FFmpeg project under the LGPLv2.1.
+https://www.ffmpeg.org/legal.html
+"RPGツクール" は株式会社 Gotcha Gotcha Games の登録商標です。`,
+	iconPath: path.resolve(__dirname, "..", "..", "img/icon.png")
+});
+
+const template: MenuItemConstructorOptions[] = [
+	{ role: "fileMenu" },
+	{ role: "viewMenu" },
+	{ role: "windowMenu" },
+	{ role: "help", submenu: [{ role: "about", label: "Software version" }] }
+];
+const menu = Menu.buildFromTemplate(template);
+Menu.setApplicationMenu(menu);
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -135,14 +158,17 @@ process.on("uncaughtException", (err: Error) => {
 // 自動アップデート関連のイベント処理
 // -------------------------------------------
 // アップデートのダウンロードが完了
-autoUpdater.on("update-downloaded", async () => {
+autoUpdater.on("update-downloaded", async event => {
 	const returnValue = await dialog.showMessageBox({
 		type: "info",
-		message: "アップデートあり",
-		detail: "再起動してインストールできます。",
-		buttons: ["再起動", "後で"]
+		message: `最新バージョン(${event.version})へのアップデート`,
+		detail: `再起動してインストールできます。詳細は以下の「更新内容を確認」から参照してください。`,
+		buttons: ["再起動", "後で", "更新内容を確認"]
 	});
 	if (returnValue.response === 0) {
 		autoUpdater.quitAndInstall(); // アプリを終了してインストール
+	} else if (returnValue.response === 2) {
+		const child = new BrowserWindow({ modal: true, show: true });
+		await child.loadURL(`https://github.com/akashic-games/tkoolmv-namagame-converter/releases/tag/v${event.version}`);
 	}
 });
