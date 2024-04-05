@@ -3,37 +3,6 @@ import * as path from "path";
 import * as acorn from "acorn";
 import type { TkoolmvPlugin } from "./tkoolmvPlugin";
 
-const TARGET_VARIABLE_NAMES = [
-	"$gameVariables",
-	"$gameSystem",
-	"$gameSwitches",
-	"$gameMessage",
-	"$gamePlayer",
-	"$dataCommonEvents",
-	"$dataTilesets",
-	"$gameMap",
-	"$gameTemp",
-	"$dataEnemies",
-	"$gameActors",
-	"$dataAnimations",
-	"$gameParty",
-	"$gameTroop",
-	"$gameTimer",
-	"$gameSelfSwitches",
-	"$dataClasses",
-	"$dataWeapons",
-	"$dataArmors",
-	"$dataItems",
-	"$gameScreen",
-	"$dataTroops",
-	"$dataActors",
-	"$dataSkills",
-	"$dataStates",
-	"$dataSystem",
-	"$dataMapInfos",
-	"$dataMap"
-];
-
 export function convertPlugins(targetPlugins: TkoolmvPlugin[], srcDir: string, distDir: string): void {
 	const errorPlugins: string[] = [];
 	for (const p of targetPlugins) {
@@ -54,16 +23,8 @@ export function convertPlugins(targetPlugins: TkoolmvPlugin[], srcDir: string, d
 	}
 }
 
-export function modifyPluginsJs(src: string): string {
-	acorn.parse(src, { ecmaVersion: 6 }); // 構文チェックのために AST にパースする
-	let modifiedSrc = src;
-	// $~ のグローバル変数には後から値が代入されるので毎回直接DataManagerから動的に値を取得する必要がある。そのため置換が必要になる
-	TARGET_VARIABLE_NAMES.forEach(name => {
-		modifiedSrc = modifiedSrc.replace(new RegExp(`\\${name}(?![0-9a-zA-Z_$])`, "g"), `DataManager_1.${name}`);
-	});
-	return `Object.defineProperty(exports, "__esModule", { value: true });
+const PLUGIN_SRC_HEADER = `Object.defineProperty(exports, "__esModule", { value: true });
 var tkool_1 = require("../");
-var DataManager_1 = require("../managers/DataManager");
 
 var DataManager = tkool_1.DataManager
 var Bitmap = tkool_1.Bitmap;
@@ -203,6 +164,71 @@ var Window_Status = tkool_1.Window_Status;
 var Window_TitleCommand = tkool_1.Window_TitleCommand;
 var Window_SavefileList = tkool_1.Window_SavefileList;
 
+var $gameVariables;
+var $gameSystem;
+var $gameSwitches;
+var $gameMessage;
+var $gamePlayer;
+var $dataCommonEvents;
+var $dataTilesets;
+var $gameMap;
+var $gameTemp;
+var $dataEnemies;
+var $gameActors;
+var $dataAnimations;
+var $gameParty;
+var $gameTroop;
+var $gameTimer;
+var $gameSelfSwitches;
+var $dataClasses;
+var $dataWeapons;
+var $dataArmors;
+var $dataItems;
+var $gameScreen;
+var $dataTroops;
+var $dataActors;
+var $dataSkills;
+var $dataStates;
+var $dataSystem;
+var $dataMapInfos;
+var $dataMap;
+
+function setGlobalVariables() {
+	$gameVariables = tkool_1.$gameVariables;
+	$gameSystem = tkool_1.$gameSystem;
+	$gameSwitches = tkool_1.$gameSwitches;
+	$gameMessage = tkool_1.$gameMessage;
+	$gamePlayer = tkool_1.$gamePlayer;
+	$dataCommonEvents = tkool_1.$dataCommonEvents;
+	$dataTilesets = tkool_1.$dataTilesets;
+	$gameMap = tkool_1.$gameMap;
+	$gameTemp = tkool_1.$gameTemp;
+	$dataEnemies = tkool_1.$dataEnemies;
+	$gameActors = tkool_1.$gameActors;
+	$dataAnimations = tkool_1.$dataAnimations;
+	$gameParty = tkool_1.$gameParty;
+	$gameTroop = tkool_1.$gameTroop;
+	$gameTimer = tkool_1.$gameTimer;
+	$gameSelfSwitches = tkool_1.$gameSelfSwitches;
+	$dataClasses = tkool_1.$dataClasses;
+	$dataWeapons = tkool_1.$dataWeapons;
+	$dataArmors = tkool_1.$dataArmors;
+	$dataItems = tkool_1.$dataItems;
+	$gameScreen = tkool_1.$gameScreen;
+	$dataTroops = tkool_1.$dataTroops;
+	$dataActors = tkool_1.$dataActors;
+	$dataSkills = tkool_1.$dataSkills;
+	$dataStates = tkool_1.$dataStates;
+	$dataSystem = tkool_1.$dataSystem;
+	$dataMapInfos = tkool_1.$dataMapInfos;
+	$dataMap = tkool_1.$dataMap;
+}
+
+// グローバル変数の初期化を可能にする
+if (!DataManager._onReset.contains(setGlobalVariables)) {
+	DataManager._onReset.add(setGlobalVariables);
+}
+
 // ブラウザ上の他スクリプトとの衝突を避けるため、ブラウザ以外の環境もしくはiframe内部でのみ書き換えを行う
 if (typeof window === "undefined" || window.top !== window) {
 	const exts = require("../../createStandardBuiltinObjectExtensions").createStandardBuiltinObjectExtensions();
@@ -220,7 +246,9 @@ if (typeof window === "undefined" || window.top !== window) {
 		Object.defineProperties(Math, exts.mathExtensions);
 	}
 }
-
-${modifiedSrc}
 `;
+
+export function modifyPluginsJs(src: string): string {
+	acorn.parse(src, { ecmaVersion: 6 }); // 構文チェックのために AST にパースする
+	return `${PLUGIN_SRC_HEADER}\n${src}`;
 }
