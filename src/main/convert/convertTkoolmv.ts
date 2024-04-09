@@ -6,7 +6,7 @@ import * as sharp from "sharp";
 import * as shell from "shelljs";
 import { mp4Inspector } from "thumbcoil";
 import { convertPlugins } from "./convertPlugins";
-import type { TkoolmvPlugin } from "./tkoolmvPlugin";
+import type { TkoolmvPlugin } from "./TkoolmvPlugin";
 
 export async function getAssetsSize(gameSrcDirPath: string): Promise<number> {
 	validateGameSrcDir(gameSrcDirPath);
@@ -42,7 +42,7 @@ async function runInDirectory(dirPath: string, run: (filePath: string) => Promis
 	}
 }
 
-const NECESSARY_PLUGIN_NAMES = ["AkashicRankingMode", "Community_Basic", "PictureCallCommon", "DTextPicture"];
+const SUPPORTED_PLUGIN_NAMES = ["AkashicRankingMode", "Community_Basic", "PictureCallCommon", "DTextPicture"];
 export async function convertTkoolmv(
 	gameBaseDirPath: string,
 	gameSrcDirPath: string,
@@ -59,7 +59,7 @@ export async function convertTkoolmv(
 	if (usePluginConverter) {
 		convertPlugins(plugins, path.join(gameSrcDirPath, "www/js/plugins"), path.join(gameDistDirPath, "script/tkool/plugins"));
 	} else {
-		plugins = plugins.filter(p => NECESSARY_PLUGIN_NAMES.includes(p.name));
+		plugins = plugins.filter(p => SUPPORTED_PLUGIN_NAMES.includes(p.name));
 	}
 	await modifyGameJson(path.join(gameDistDirPath, "game.json"), plugins);
 	modifyPluginsJson(path.join(gameDistDirPath, "text/Plugins.json"), plugins);

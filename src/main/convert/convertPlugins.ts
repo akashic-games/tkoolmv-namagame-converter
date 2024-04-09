@@ -1,11 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as acorn from "acorn";
-import type { TkoolmvPlugin } from "./tkoolmvPlugin";
+import type { TkoolmvPlugin } from "./TkoolmvPlugin";
 
 export function convertPlugins(targetPlugins: TkoolmvPlugin[], srcDir: string, distDir: string): void {
 	const errorPlugins: string[] = [];
 	for (const p of targetPlugins) {
+		// キット側で定義済みのプラグインについては変換処理を行わずスキップ
 		if (fs.existsSync(path.join(distDir, `${p.name}.js`))) {
 			continue;
 		}
