@@ -59,10 +59,11 @@ export async function convertTkoolmv(
 	if (usePluginConverter) {
 		convertPlugins(plugins, path.join(gameSrcDirPath, "www/js/plugins"), path.join(gameDistDirPath, "script/tkool/plugins"));
 	} else {
+		// プラグインを変換しない場合、非サポートプラグインは動作しないので除外する
 		plugins = plugins.filter(p => SUPPORTED_PLUGIN_NAMES.includes(p.name));
 	}
+	fs.writeFileSync(path.join(gameDistDirPath, "text/Plugins.json"), JSON.stringify(plugins, null, 2));
 	await modifyGameJson(path.join(gameDistDirPath, "game.json"), plugins);
-	modifyPluginsJson(path.join(gameDistDirPath, "text/Plugins.json"), plugins);
 	await compressImageAssets(gameSrcDirPath, gameDistDirPath);
 	return gameDistDirPath;
 }
@@ -248,10 +249,6 @@ async function getAudioDurationInSeconds(filepath: string): Promise<number> {
 	} else {
 		throw new Error("Unsupported format: " + ext);
 	}
-}
-
-function modifyPluginsJson(pluginsJsonPath: string, plugins: TkoolmvPlugin[]): void {
-	fs.writeFileSync(pluginsJsonPath, JSON.stringify(plugins, null, 2));
 }
 
 async function compressImageAssets(gameSrcDirPath: string, gameDistDirPath: string): Promise<void> {

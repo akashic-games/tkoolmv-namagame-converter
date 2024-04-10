@@ -249,7 +249,7 @@ if (typeof window === "undefined" || window.top !== window) {
 }
 `;
 
-export function modifyPluginsJs(src: string): string {
+function modifyPluginsJs(src: string): string {
 	acorn.parse(src, { ecmaVersion: 6 }); // 構文チェックのために AST にパースする
 	return `${PLUGIN_SRC_HEADER}\n${src}`;
 }
