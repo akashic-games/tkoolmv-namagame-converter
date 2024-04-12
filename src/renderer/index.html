@@ -73,9 +73,11 @@ main {
 	<h1>RPG ツクール MV ニコ生ゲーム化コンバーター</h1>
 	<p class="abstract">
 		『RPGツクールMV』で作成されたゲームをニコ生ゲームに変換するツールです。<br>
-		ダウンロードボタンでzip化されたニコ生ゲームをダウンロードできます。
+		ダウンロードボタンでzip化されたニコ生ゲームをダウンロードできます。<br>
+		「RPGツクールMVプラグインを含めて変換する」にチェックを入れると、<a href="https://akashic-games.github.io/shin-ichiba/tkool-mv/specification.html#limitations" target="_blank">非サポートプラグイン</a>もニコ生ゲーム上で動くように変換処理が行われます(ただし、プラグインが正常に動作しないこともあります。その場合はチェックを外して再度変換処理を行ってください)。
 	</p>
 	<div id="error_message_area"></div>
+	<p><input id="use-plugin-converter" type="checkbox" value="">RPGツクールMVプラグインを含めて変換する(試験中)</p>
 	<div class="converter">
 		<div id="drop_zone">
 			<div id="message_container">
