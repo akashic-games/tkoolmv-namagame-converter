@@ -100,7 +100,7 @@ ipcMain.handle("get-assets-size", async (_event, dirPath) => {
 });
 
 ipcMain.handle("generate-nama-game-dir", async (_event, dirPath, usePluginConverter) => {
-	return await convertTkoolmv(gameBaseDirPath, dirPath, path.join(runtimeDirPath, "tkoolmv-namagame-kit"), usePluginConverter);
+	return await convertTkoolmv(gameBaseDirPath, dirPath, path.join(runtimeDirPath, "tkoolmv-namagame-runtime"), usePluginConverter);
 });
 
 ipcMain.handle("get-audio-data", (_event, dirPath) => {
