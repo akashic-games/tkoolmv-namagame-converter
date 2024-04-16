@@ -36,7 +36,7 @@ async function createWindow(): Promise<void> {
 }
 
 const cacheDirPath: string = path.join(os.tmpdir(), ".converter-cache");
-const runtimeDirPath: string = path.join(cacheDirPath, "runtime");
+const runtimeDirPath: string = path.join(cacheDirPath, "tkoolmv-namagame-runtime-v2");
 async function updateModule(): Promise<void> {
 	try {
 		if (!fs.existsSync(runtimeDirPath)) {
