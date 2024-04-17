@@ -7,27 +7,19 @@ export async function updateTkoolmvNamagameKitRuntime(moduleDirPath: string): Pr
 	const moduleName = "tkoolmv-namagame-runtime";
 	const versionTxtPath = path.join(moduleDirPath, "version.txt");
 	const latestVersion = await getLatestVersion(moduleName);
-	const installRuntime = async (): Promise<void> => {
-		await installModule(moduleName, latestVersion, `tkoolmv-namagame-runtime-${latestVersion}.zip`, moduleDirPath);
-		fs.writeFileSync(versionTxtPath, latestVersion);
-	};
-	if (!fs.existsSync(versionTxtPath)) {
-		if (!fs.existsSync(moduleDirPath)) {
-			fs.mkdirSync(moduleDirPath, { recursive: true });
-		}
-		await installRuntime();
-		return;
-	}
-	const currentVersion = fs.readFileSync(versionTxtPath).toString().trim();
-	if (currentVersion !== latestVersion) {
+	if (fs.existsSync(versionTxtPath)) {
+		const currentVersion = fs.readFileSync(versionTxtPath).toString().trim();
 		const current = currentVersion.split(".");
 		const latest = latestVersion.split(".");
-		if (current[0] !== latest[0]) {
+		if (currentVersion === latestVersion || current[0] !== latest[0]) {
 			return;
 		}
-		await installRuntime();
-		return;
 	}
+	if (!fs.existsSync(moduleDirPath)) {
+		fs.mkdirSync(moduleDirPath, { recursive: true });
+	}
+	await installModule(moduleName, latestVersion, `tkoolmv-namagame-runtime-${latestVersion}.zip`, moduleDirPath);
+	fs.writeFileSync(versionTxtPath, latestVersion);
 }
 
 async function getLatestVersion(moduleName: string): Promise<string> {
