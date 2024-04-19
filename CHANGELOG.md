@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased changes
+## 1.1.0
 * サポート対象外の RPG ツクール MV プラグインも変換できるように
 
 ## 1.0.3
