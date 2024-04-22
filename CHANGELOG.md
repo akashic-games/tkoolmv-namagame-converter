@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased changes
+* game.json が指定する akashic-runtime のバージョンを 3.7.19-0 に更新
+* コアスクリプトの取得先を変更
+
 ## 1.1.0
 * サポート対象外の RPG ツクール MV プラグインも変換できるように
 

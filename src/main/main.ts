@@ -36,7 +36,7 @@ async function createWindow(): Promise<void> {
 }
 
 const cacheDirPath: string = path.join(os.tmpdir(), ".converter-cache");
-const runtimeDirPath: string = path.join(cacheDirPath, "runtime");
+const runtimeDirPath: string = path.join(cacheDirPath, "tkoolmv-namagame-runtime-v2");
 async function updateModule(): Promise<void> {
 	try {
 		if (!fs.existsSync(runtimeDirPath)) {
@@ -100,7 +100,7 @@ ipcMain.handle("get-assets-size", async (_event, dirPath) => {
 });
 
 ipcMain.handle("generate-nama-game-dir", async (_event, dirPath, usePluginConverter) => {
-	return await convertTkoolmv(gameBaseDirPath, dirPath, path.join(runtimeDirPath, "tkoolmv-namagame-kit"), usePluginConverter);
+	return await convertTkoolmv(gameBaseDirPath, dirPath, path.join(runtimeDirPath, "tkoolmv-namagame-runtime"), usePluginConverter);
 });
 
 ipcMain.handle("get-audio-data", (_event, dirPath) => {
