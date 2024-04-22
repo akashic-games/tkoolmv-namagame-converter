@@ -209,7 +209,7 @@ async function modifyGameJson(gameJsonPath: string, plugins: TkoolmvPlugin[]): P
 		send: "0"
 	};
 	gameJson.environment["akashic-runtime"] = {
-		version: "~3.7.18-1",
+		version: "~3.7.19-0",
 		flavor: "-canvas"
 	};
 	plugins.forEach(p => {
