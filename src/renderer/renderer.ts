@@ -120,6 +120,7 @@ window.addEventListener("load", () => {
 		} catch (e) {
 			errorMessageArea.innerHTML = `ゲーム変換時に次のエラーが発生：${e.message}`;
 		} finally {
+			usePluginConverterCheckbox.disabled = false;
 			isConverting = false;
 			if (timerId) {
 				window.clearInterval(timerId);
