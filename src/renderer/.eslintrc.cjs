@@ -3,13 +3,37 @@ require('@rushstack/eslint-patch/modern-module-resolution')
 
 module.exports = {
   root: true,
-  'extends': [
-    'plugin:vue/vue3-essential',
-    'eslint:recommended',
-    '@vue/eslint-config-typescript',
-    '@vue/eslint-config-prettier/skip-formatting'
-  ],
+  parser: "vue-eslint-parser",
   parserOptions: {
-    ecmaVersion: 'latest'
+    parser: "@typescript-eslint/parser",
+    sourceType: "module",
+    ecmaVersion: 2020,
+    ecmaFeatures: {
+      jsx: true
+    }
+  },
+  plugins: [
+    "import",
+    "unused-imports"
+  ],
+  extends: [
+    "plugin:vue/vue3-recommended",
+    "prettier"
+  ],
+  rules: {
+    // TODO
+    "vue/html-indent": "off",
+    "vue/attribute-hyphenation": "off",
+    "import/order": ["error", {
+      "alphabetize": {
+        "order": "asc",
+        "caseInsensitive": true
+      }
+    }],
+    "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports-ts": "error",
+    "unused-imports/no-unused-vars-ts": [
+      "off" // TODO: 誤検知のため一旦 off
+    ]
   }
 }
