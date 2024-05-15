@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## Unreleased changes
-* game.json が指定する akashic-runtime のバージョンを 3.7.19-0 に更新
+## 2.0.0
 * コアスクリプトの取得先を変更
+* game.json が指定する akashic-runtime のバージョンを 3.7.19-0 に更新
 * 変換エラー時に「RPG ツクール MV プラグインを含めて変換する」チェックボックスが disabled のままになる不具合の修正
 
 ## 1.1.0
