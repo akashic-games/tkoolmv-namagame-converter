@@ -9,6 +9,7 @@ export interface PlaygroundServer {
 
 export function createPlaygroundServer(gameBaseDir: string, audioBaseDir?: string): PlaygroundServer {
 	const playgroundDst = path.join(__dirname, "..", "..", "playground");
+	const ffmpegDst = path.join(__dirname, "..", "..", "ffmpeg");
 	const app = express();
 	app.use((_req, res, next) => {
 		res.header("Access-Control-Allow-Origin", "*");
@@ -17,6 +18,7 @@ export function createPlaygroundServer(gameBaseDir: string, audioBaseDir?: strin
 	});
 	app.use("/playground/", express.static(playgroundDst));
 	app.use("/games/", express.static(gameBaseDir));
+	app.use("/ffmpeg/", express.static(ffmpegDst));
 	if (audioBaseDir) {
 		// renderer プロセスから ffmpeg.wasm がアクセスできるようにホストする
 		app.use("/audio/", express.static(audioBaseDir));

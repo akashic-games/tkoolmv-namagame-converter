@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("tkoolmvApi", {
 	getAssetsSize: (dirPath: string) => ipcRenderer.invoke("get-assets-size", dirPath),
+	getFfmpegUrl: () => ipcRenderer.invoke("get-ffmpeg-url"),
 	// 以下のAPIは本来ならば1つのAPIにまとめるべきだが、最新のffmpeg.wasmがNode.jsに対応していないため音声の圧縮処理はレンダラー側で行う必要があるため、APIを分割している
 	generateNamaGameDir: (dirPath: string, usePluginConverter: boolean) =>
 		ipcRenderer.invoke("generate-nama-game-dir", dirPath, usePluginConverter),
