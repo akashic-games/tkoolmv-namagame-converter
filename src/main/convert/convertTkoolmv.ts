@@ -85,7 +85,6 @@ function copyGameElements(gameSrcDirPath: string, gameDistDirPath: string, tkool
 	shell.mkdir(path.join(gameDistDirPath, "assets"));
 	shell.mkdir(path.join(gameDistDirPath, "text"));
 	shell.mkdir(path.join(gameDistDirPath, "script"));
-	shell.mkdir(path.join(gameDistDirPath, "node_modules"));
 	if (fs.existsSync(path.join(gameSrcDirPath, "www/audio"))) {
 		shell.cp("-Rf", path.join(gameSrcDirPath, "www/audio"), path.join(gameDistDirPath, "assets"));
 	} else {
@@ -94,7 +93,6 @@ function copyGameElements(gameSrcDirPath: string, gameDistDirPath: string, tkool
 	shell.cp("-Rf", path.join(gameSrcDirPath, "www/img"), path.join(gameDistDirPath, "assets"));
 	shell.cp("-Rf", path.join(gameSrcDirPath, "www/data/*"), path.join(gameDistDirPath, "text"));
 	shell.cp("-Rf", path.join(tkoolmvKitDirPath, "game/script/*"), path.join(gameDistDirPath, "script"));
-	shell.cp("-Rf", path.join(tkoolmvKitDirPath, "game/node_modules/*"), path.join(gameDistDirPath, "node_modules"));
 	shell.cp("-Rf", path.join(tkoolmvKitDirPath, "game/text/*"), path.join(gameDistDirPath, "text"));
 	shell.cp(path.join(tkoolmvKitDirPath, "game/game.json"), gameDistDirPath);
 }
