@@ -18,7 +18,7 @@ export async function updateTkoolmvNamagameKitRuntime(moduleDirPath: string): Pr
 	if (!fs.existsSync(moduleDirPath)) {
 		fs.mkdirSync(moduleDirPath, { recursive: true });
 	}
-	await installModule(moduleName, latestVersion, `tkoolmv-namagame-runtime-${latestVersion}.zip`, moduleDirPath);
+	await installModule(moduleName, latestVersion, `tkoolmv-namagame-runtime.zip`, moduleDirPath);
 	fs.writeFileSync(versionTxtPath, latestVersion);
 }
 
