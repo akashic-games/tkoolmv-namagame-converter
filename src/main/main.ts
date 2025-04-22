@@ -1,7 +1,7 @@
-import * as admZip from "adm-zip";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import * as admZip from "adm-zip";
 import type { MenuItemConstructorOptions } from "electron";
 import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from "electron";
 import * as log from "electron-log";
@@ -38,7 +38,7 @@ async function createWindow(): Promise<void> {
 
 const cacheDirPath: string = path.join(os.tmpdir(), ".converter-cache");
 const runtimeDirPath: string = path.join(cacheDirPath, "tkoolmv-namagame-runtime-v2");
-const unzipDirPath =  fs.mkdtempSync(path.join(os.tmpdir(), "converter-runteime"));
+const unzipDirPath = fs.mkdtempSync(path.join(os.tmpdir(), "converter-runteime"));
 async function updateModule(): Promise<void> {
 	try {
 		if (!fs.existsSync(runtimeDirPath)) {
