@@ -1,3 +1,4 @@
+import * as admZip from "adm-zip";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -37,12 +38,15 @@ async function createWindow(): Promise<void> {
 
 const cacheDirPath: string = path.join(os.tmpdir(), ".converter-cache");
 const runtimeDirPath: string = path.join(cacheDirPath, "tkoolmv-namagame-runtime-v2");
+const unzipDirPath =  fs.mkdtempSync(path.join(os.tmpdir(), "converter-runteime"));
 async function updateModule(): Promise<void> {
 	try {
 		if (!fs.existsSync(runtimeDirPath)) {
 			fs.mkdirSync(runtimeDirPath, { recursive: true });
 		}
 		await updateTkoolmvNamagameKitRuntime(runtimeDirPath);
+		const zip = new admZip(path.join(runtimeDirPath, "tkoolmv-namagame-runtime.zip"));
+		zip.extractAllTo(unzipDirPath);
 	} catch (e) {
 		console.error(e);
 	}
@@ -100,7 +104,7 @@ ipcMain.handle("get-assets-size", async (_event, dirPath) => {
 });
 
 ipcMain.handle("generate-nama-game-dir", async (_event, dirPath, usePluginConverter) => {
-	return await convertTkoolmv(gameBaseDirPath, dirPath, path.join(runtimeDirPath, "tkoolmv-namagame-runtime"), usePluginConverter);
+	return await convertTkoolmv(gameBaseDirPath, dirPath, path.join(unzipDirPath, "tkoolmv-namagame-runtime"), usePluginConverter);
 });
 
 ipcMain.handle("get-audio-data", (_event, dirPath) => {
@@ -144,6 +148,7 @@ app.on("window-all-closed", () => {
 	playgroundServer!.server.close();
 	sh.rm("-Rf", gameBaseDirPath);
 	sh.rm("-Rf", audioBaseDirPath);
+	sh.rm("-Rf", unzipDirPath);
 });
 
 // In this file you can include the rest of your app"s specific main process
