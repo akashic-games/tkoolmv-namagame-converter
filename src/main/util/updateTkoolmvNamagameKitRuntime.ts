@@ -1,13 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as admZip from "adm-zip";
 import * as sh from "shelljs";
 
 export async function updateTkoolmvNamagameKitRuntime(moduleDirPath: string): Promise<void> {
 	const moduleName = "tkoolmv-namagame-runtime";
 	const versionTxtPath = path.join(moduleDirPath, "version.txt");
 	const latestVersion = await getLatestVersion(moduleName);
-	if (fs.existsSync(versionTxtPath)) {
+	const zipPath = path.join(moduleDirPath, "tkoolmv-namagame-runtime.zip");
+	if (fs.existsSync(versionTxtPath) && fs.existsSync(zipPath)) {
 		const currentVersion = fs.readFileSync(versionTxtPath).toString().trim();
 		const current = currentVersion.split(".");
 		const latest = latestVersion.split(".");
@@ -52,6 +52,4 @@ async function installModule(moduleName: string, version: string, zipFileName: s
 	const arrayBuffer = await downloadResponse.arrayBuffer();
 	sh.rm("-Rf", path.join(dest, "*"));
 	fs.writeFileSync(path.join(dest, zipFileName), Buffer.from(arrayBuffer));
-	const zip = new admZip(path.join(dest, zipFileName));
-	zip.extractAllTo(dest);
 }
