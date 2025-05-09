@@ -31,6 +31,7 @@
 以下のコマンドでビルドを実行します。
 
 ```bash
+git submodule update --init # moduleディレクトリ以下のサブモジュールの内容を同期・取得します
 npm install
 ```
 

@@ -103,6 +103,10 @@ ipcMain.handle("get-assets-size", async (_event, dirPath) => {
 	return await getAssetsSize(dirPath);
 });
 
+ipcMain.handle("get-ffmpeg-url", () => {
+	return `${playgroundServer!.baseUrl}/ffmpeg`;
+});
+
 ipcMain.handle("generate-nama-game-dir", async (_event, dirPath, usePluginConverter) => {
 	return await convertTkoolmv(gameBaseDirPath, dirPath, path.join(unzipDirPath, "tkoolmv-namagame-runtime"), usePluginConverter);
 });
