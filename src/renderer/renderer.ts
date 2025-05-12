@@ -55,10 +55,18 @@ window.addEventListener("load", () => {
 					const asset = audioData[i * unit + j];
 					const prefix = "ffmpeg_audio_";
 					await ffmpeg.writeFile(asset.name, await FFmpegUtil.fetchFile(asset.url));
-					await ffmpeg.exec(["-i", asset.name, "-ab", "24k", "-ar", "22050", "-ac", "1", prefix + asset.name]);
-					const audioBinary: Uint8Array = await ffmpeg.readFile(prefix + asset.name);
+					// 再生時間が非常に短い(サイズが小さい)oggファイルは、圧縮処理によって一部環境で再生できなくなることがあるため、処理を分けている
+					if (asset.size < 10000 && /\.ogg$/.test(asset.name)) {
+						// 経験的に問題ないパラメーターを使うことで圧縮より再生可能であることを優先する
+						await ffmpeg.exec(["-i", asset.name, "-ab", "64k", "-ar", "44100", "-ac", "1", prefix + asset.name]);
+					} else {
+						await ffmpeg.exec(["-i", asset.name, "-ab", "24k", "-ar", "22050", "-ac", "1", prefix + asset.name]);
+					}
+					let audioBinary: Uint8Array = await ffmpeg.readFile(prefix + asset.name);
 					if (asset.size <= audioBinary.byteLength) {
-						throw new Error(`can not compress audio, before:${asset.size}, after:${audioBinary.byteLength}`);
+						// 圧縮できなかったことをログに残して、元のデータをそのまま使うように
+						console.log(`can not compress audio: ${asset.name}, before: ${asset.size}, after: ${audioBinary.byteLength}`);
+						audioBinary = await ffmpeg.readFile(asset.name);
 					}
 					await (window as any).tkoolmvApi.setAudioBinary(gameDistDirPath, asset.path, audioBinary);
 				}
