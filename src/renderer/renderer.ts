@@ -119,6 +119,9 @@ window.addEventListener("load", () => {
 			iframElement.src = response.gameContentUrl;
 			iframElement.width = "100%";
 			iframElement.height = "100%";
+			// スクリプトの実行と同一オリジンリソースへのアクセス以外を許可しないようにsandbox属性を設定する
+			// sandboxはreadonlyなのでas anyとする
+			(iframElement as any).sandbox = "allow-scripts allow-same-origin";
 			dropZone.append(iframElement);
 			download.disabled = false;
 			reset.disabled = false;
