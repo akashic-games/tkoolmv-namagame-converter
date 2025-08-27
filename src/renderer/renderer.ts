@@ -119,8 +119,8 @@ window.addEventListener("load", () => {
 			iframElement.src = response.gameContentUrl;
 			iframElement.width = "100%";
 			iframElement.height = "100%";
-			// スクリプトの実行以外を許可しないようにsandbox属性を設定する
-			// sandboxはreadonlyなのでas anyとする
+			// スクリプトの実行以外を許可しないように sandbox 属性を設定する
+			// sandbox は誤って TS の型上 readonly とされているので as any とする
 			(iframElement as any).sandbox = "allow-scripts";
 			dropZone.append(iframElement);
 			download.disabled = false;
