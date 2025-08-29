@@ -1,6 +1,7 @@
 import * as http from "http";
 import * as path from "path";
 import * as express from "express";
+import * as helmet from "helmet";
 
 export interface PlaygroundServer {
 	server: http.Server;
@@ -15,6 +16,22 @@ export function createPlaygroundServer(gameBaseDir: string, audioBaseDir?: strin
 		res.header("Access-Control-Allow-Credentials", "true");
 		next();
 	});
+	app.use(
+		helmet.contentSecurityPolicy({
+			directives: {
+				defaultSrc: ["'none'"],
+				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+				connectSrc: ["'self'"],
+				imgSrc: ["'self'", "data:"],
+				mediaSrc: ["'self'"],
+				styleSrc: ["'self'", "'unsafe-inline'"],
+				baseUri: ["'none'"],
+				formAction: ["'none'"],
+				workerSrc: ["'self'"],
+				frameAncestors: ["'self'", "file://*"]
+			}
+		})
+	);
 	app.use("/playground/", express.static(playgroundDst));
 	app.use("/games/", express.static(gameBaseDir));
 	if (audioBaseDir) {
