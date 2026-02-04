@@ -28,10 +28,31 @@
 - `document` や `window` など Web ブラウザ上でのみ利用可能な値の利用
 
 ## ビルド方法
-以下のコマンドでビルドを実行します。
+以下の手順でビルドを実行します。
 
 ```bash
 npm install
+```
+
+git submodule を更新します。
+
+```bash
+git submodule update --init
+```
+
+ffmpeg のビルドを行います。
+
+```bash
+# windows の場合
+npm run build-ffmpeg
+# mac の場合
+npm run build-ffmpeg-for-mac
+```
+
+ビルド実行
+
+```bash
+npm run build
 ```
 
 ## 動作確認方法
