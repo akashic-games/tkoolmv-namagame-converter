@@ -30,10 +30,6 @@
 ## ビルド方法
 以下の手順でビルドを実行します。
 
-```bash
-npm install
-```
-
 git submodule を更新します。
 
 ```bash
@@ -47,6 +43,12 @@ ffmpeg のビルドを行います。
 npm run build-ffmpeg
 # mac の場合
 npm run build-ffmpeg-for-mac
+```
+
+インストール
+
+```bash
+npm install
 ```
 
 ビルド実行
