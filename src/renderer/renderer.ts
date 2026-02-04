@@ -3,7 +3,7 @@ interface AudioDataParameter {
 	url: string;
 	path: string;
 	size: number;
-	isComplement?: boolean
+	isComplement?: boolean;
 }
 
 interface ComplementAssetData {
@@ -61,7 +61,7 @@ window.addEventListener("load", () => {
 				});
 				for (let j = 0; j < unit && i * unit + j < audioData.length; j++) {
 					const asset = audioData[i * unit + j];
-					const assetKey = asset.name.replace(/^(.+)\..+$/, '$1');
+					const assetKey = asset.name.replace(/^(.+)\..+$/, "$1");
 					await ffmpeg.writeFile(asset.name, await FFmpegUtil.fetchFile(asset.url));
 					// 再生時間が非常に短い(サイズが小さい)oggファイルは、圧縮処理によって一部環境で再生できなくなることがあるため、処理を分けている
 					if (asset.size < 10000 && /\.ogg$/.test(asset.name)) {
@@ -83,7 +83,7 @@ window.addEventListener("load", () => {
 						const assetName = key + ".ogg";
 						await ffmpeg.exec(["-i", srcAsset.name, "-map", "a", "-acodec", "libvorbis", FFMPEG_PREFIX + assetName]);
 						asset = createAsset(assetName, srcAsset, ".ogg");
-					} else if (!data.m4aAsset) { 
+					} else if (!data.m4aAsset) {
 						const srcAsset = data.oggAsset!;
 						const assetName = key + ".m4a";
 						await ffmpeg.exec(["-i", srcAsset.name, "-map", "a", "-strict", "2", FFMPEG_PREFIX + assetName]);
@@ -114,16 +114,16 @@ window.addEventListener("load", () => {
 	}
 
 	function createComplementData(map: Map<string, ComplementAssetData>, asset: AudioDataParameter): ComplementAssetData {
-		const isOgg = /\.ogg$/.test(asset.name)
-		const key = asset.name.replace(/^(.+)\..+$/, '$1');
+		const isOgg = /\.ogg$/.test(asset.name);
+		const key = asset.name.replace(/^(.+)\..+$/, "$1");
 		const data = map.get(key);
 		return {
-			oggAsset: data?.oggAsset ?? isOgg ? asset : undefined, 
+			oggAsset: data?.oggAsset ?? isOgg ? asset : undefined,
 			m4aAsset: data?.m4aAsset ?? !isOgg ? asset : undefined
 		};
 	}
 
-	function createAsset(name: string, srcAsset: AudioDataParameter, ext: string) { 
+	function createAsset(name: string, srcAsset: AudioDataParameter, ext: string): AudioDataParameter {
 		return {
 			name,
 			url: srcAsset.url.replace(/\.[^/.]+$/, ext),
