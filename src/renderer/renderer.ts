@@ -3,7 +3,6 @@ interface AudioDataParameter {
 	url: string;
 	path: string;
 	size: number;
-	isComplement?: boolean;
 }
 
 interface ComplementAssetData {
@@ -92,7 +91,7 @@ window.addEventListener("load", () => {
 					}
 
 					if (asset)
-						await setAudioBinary(asset, ffmpeg);
+						await setAudioBinary(asset, ffmpeg, true);
 				}
 				await ffmpeg.terminate();
 			}
@@ -102,13 +101,13 @@ window.addEventListener("load", () => {
 		}
 	}
 
-	async function setAudioBinary(asset: AudioDataParameter, ffmpeg: any): Promise<void> {
+	async function setAudioBinary(asset: AudioDataParameter, ffmpeg: any, isComplement?: boolean): Promise<void> {
 		let audioBinary: Uint8Array = await ffmpeg.readFile(FFMPEG_PREFIX + asset.name);
-		if (!asset.isComplement) {
+		if (isComplement) {
 			// 補完した asset は作成時にサイズが設定されていないので、読み込んだ後に設定
 			asset.size = audioBinary.byteLength;
 		}
-		if (!asset.isComplement && asset.size <= audioBinary.byteLength) {
+		if (!isComplement && asset.size <= audioBinary.byteLength) {
 			// 圧縮できなかったことをログに残して、元のデータをそのまま使うように
 			audioBinary = await ffmpeg.readFile(asset.name);
 		}
@@ -132,7 +131,6 @@ window.addEventListener("load", () => {
 			url: srcAsset.url.replace(/\.[^/.]+$/, ext),
 			path: srcAsset.path.replace(/\.[^/.]+$/, ext),
 			size: 0, // setAudioBinary() で ffmpeg.readFile() した時に設定する
-			isComplement: true // 補完フラグ
 		};
 	}
 
