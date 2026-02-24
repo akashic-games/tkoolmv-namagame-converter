@@ -5,9 +5,9 @@ interface AudioDataParameter {
 	size: number;
 }
 
-interface ComplementAssetData {
-	oggAsset?: AudioDataParameter;
-	m4aAsset?: AudioDataParameter;
+interface ComplementAudioData {
+	oggData?: AudioDataParameter;
+	m4aData?: AudioDataParameter;
 }
 
 // これらのモジュールはこのスクリプトファイルの呼び出し元である index.html で読み込まれている前提
@@ -45,60 +45,88 @@ window.addEventListener("load", () => {
 		usePluginConverterCheckbox.checked = false;
 	}
 
+	let useFfmpegCount = 0;
+	let ffmpeg = new FFmpegWASM.FFmpeg();
+	async function withFfmpegInstance<T>(func: (ffmpeg: any) => Promise<T>): Promise<T> {
+		if (useFfmpegCount === 0) {
+			await ffmpeg.load({
+				coreURL: "./ffmpeg-core/ffmpeg-core.js"
+			});
+		}
+		try {
+			return await func(ffmpeg);
+		} finally {
+			useFfmpegCount = (useFfmpegCount + 1) % 15; 
+			// 1回のFFmpegインスタンスで処理できるファイル数に制限があるため、分割して処理する
+			if (useFfmpegCount === 0) {
+				ffmpeg.terminate();
+			}
+		}
+	}
+
 	// 対象ディレクトリ中の全音声ファイルを圧縮する
 	// 本来はメインプロセス側で行うべき処理だが、ffmpeg.wasmがNode.jsに対応していないためレンダラー側で行う
 	async function generateNamagameAudioAssets(gameSrcDirPath: string): Promise<void> {
 		try {
-			const audioData: AudioDataParameter[] = await (window as any).tkoolmvApi.getAudioData(gameSrcDirPath);
-			const ffmpeg = new FFmpegWASM.FFmpeg();
-			// 1回のFFmpegインスタンスで処理できるファイル数に制限があるため、分割して処理する
-			const unit = 15;
-			for (let i = 0; i * unit < audioData.length; i++) {
-				const complementMap = new Map<string, ComplementAssetData>();
-				await ffmpeg.load({
-					coreURL: "./ffmpeg-core/ffmpeg-core.js"
+			const audioDataList: AudioDataParameter[] = await (window as any).tkoolmvApi.getAudioData(gameSrcDirPath);
+			const complementMap = new Map<string, ComplementAudioData>();
+			for (const audioData of audioDataList) { 
+				await withFfmpegInstance(async (ffmpeg) => {
+					await ffmpeg.writeFile(audioData.name, await FFmpegUtil.fetchFile(audioData.url));
+					await generateAudioAsset(audioData, ffmpeg);
+					registerComplementData(complementMap, audioData);
 				});
-				for (let j = 0; j < unit && i * unit + j < audioData.length; j++) {
-					const asset = audioData[i * unit + j];
-					await ffmpeg.writeFile(asset.name, await FFmpegUtil.fetchFile(asset.url));
-					// 再生時間が非常に短い(サイズが小さい)oggファイルは、圧縮処理によって一部環境で再生できなくなることがあるため、処理を分けている
-					if (asset.size < 10000 && /\.ogg$/.test(asset.name)) {
-						// 経験的に問題ないパラメーターを使うことで圧縮より再生可能であることを優先する
-						await ffmpeg.exec(["-i", asset.name, "-ab", "64k", "-ar", "44100", "-ac", "1", FFMPEG_PREFIX + asset.name]);
-						setComplementData(complementMap, asset);
-					} else {
-						await ffmpeg.exec(["-i", asset.name, "-ab", "24k", "-ar", "22050", "-ac", "1", FFMPEG_PREFIX + asset.name]);
-						setComplementData(complementMap, asset);
-					}
-					await setAudioBinary(asset, ffmpeg);
-				}
-
-				// 不足している asset (.ogg/.m4a) を補完
-				for (const [key, data] of complementMap) {
-					let asset;
-					if (data.oggAsset && data.m4aAsset) {
-						continue;
-					} else if (!data.oggAsset) {
-						const srcAsset = data.m4aAsset!;
-						const assetName = key + ".ogg";
-						await ffmpeg.exec(["-i", srcAsset.name, "-map", "a", "-acodec", "libvorbis", FFMPEG_PREFIX + assetName]);
-						asset = createAsset(assetName, srcAsset, ".ogg");
-					} else if (!data.m4aAsset) {
-						const srcAsset = data.oggAsset!;
-						const assetName = key + ".m4a";
-						await ffmpeg.exec(["-i", srcAsset.name, "-map", "a", "-strict", "2", FFMPEG_PREFIX + assetName]);
-						asset = createAsset(assetName, srcAsset, ".m4a");
-					}
-
-					if (asset)
-						await setAudioBinary(asset, ffmpeg, true);
-				}
-				await ffmpeg.terminate();
 			}
+
+			const complementAudioList =  collectLackingAudio(complementMap);
+			for (const audioData of complementAudioList) {
+				await withFfmpegInstance(async (ffmpeg) => {
+					const isOgg = /\.ogg$/.test(audioData.path);
+					const assetName = isOgg ? audioData.name.replace(".ogg", ".m4a") : audioData.name.replace(".m4a", ".ogg");					
+					const ffmpegArgs = isOgg
+						? ["-i", audioData.name, "-map", "a", "-strict", "2", FFMPEG_PREFIX + assetName]
+						: ["-i", audioData.name, "-map", "a", "-acodec", "libvorbis", FFMPEG_PREFIX + assetName]
+
+					const ext = isOgg ? ".m4a" : ".ogg";
+					const data = createAudioDataFrom(assetName, audioData, ext);
+					await ffmpeg.writeFile(audioData.name, await FFmpegUtil.fetchFile(audioData.url));
+					await generateAudioAsset(data, ffmpeg, ffmpegArgs, true);
+				});
+			}	
 		} catch (err) {
 			console.log(err);
 			throw err;
 		}
+	}
+
+	async function generateAudioAsset(audioData: AudioDataParameter, ffmpeg: any, ffmpegArgs?: string[], isComplement?: boolean): Promise<void> {
+		try {
+			// 再生時間が非常に短い(サイズが小さい)oggファイルは、圧縮処理によって一部環境で再生できなくなることがあるため、処理を分けている
+			if (audioData.size < 10000 && /\.ogg$/.test(audioData.name)) {
+				// 経験的に問題ないパラメーターを使うことで圧縮より再生可能であることを優先する
+				const args = ffmpegArgs ?? ["-i", audioData.name, "-ab", "64k", "-ar", "44100", "-ac", "1", FFMPEG_PREFIX + audioData.name];
+				await ffmpeg.exec(args);
+			} else {
+				const args = ffmpegArgs ?? ["-i", audioData.name, "-ab", "24k", "-ar", "22050", "-ac", "1", FFMPEG_PREFIX + audioData.name];
+				await ffmpeg.exec(args);
+			}
+			await setAudioBinary(audioData, ffmpeg, isComplement);
+		} catch (err) {
+			console.log(err);
+			throw err;
+		}
+	}
+
+	function collectLackingAudio(complementMap: Map<string, ComplementAudioData>): AudioDataParameter[] { 
+		const complementAudioList: AudioDataParameter[] = [];
+		[...complementMap.values()].forEach(data => {
+			if (!data.oggData) {
+				complementAudioList.push(data.m4aData!);
+			} else if (!data.m4aData) {
+				complementAudioList.push(data.oggData!);
+			}
+		});
+		return complementAudioList;
 	}
 
 	async function setAudioBinary(asset: AudioDataParameter, ffmpeg: any, isComplement?: boolean): Promise<void> {
@@ -109,27 +137,28 @@ window.addEventListener("load", () => {
 		}
 		if (!isComplement && asset.size <= audioBinary.byteLength) {
 			// 圧縮できなかったことをログに残して、元のデータをそのまま使うように
+			console.log(`can not compress audio: ${asset.name}, before: ${asset.size}, after: ${audioBinary.byteLength}`);
 			audioBinary = await ffmpeg.readFile(asset.name);
 		}
 		await (window as any).tkoolmvApi.setAudioBinary(gameDistDirPath, asset.path, audioBinary);
 	}
 
-	function setComplementData(map: Map<string, ComplementAssetData>, asset: AudioDataParameter): void {
-		const isOgg = /\.ogg$/.test(asset.name);
-		const key = asset.name.replace(/^(.+)\..+$/, "$1");
+	function registerComplementData(map: Map<string, ComplementAudioData>, audioData: AudioDataParameter): void {
+		const isOgg = /\.ogg$/.test(audioData.name);
+		const key = audioData.name.replace(/^(.+)\..+$/, "$1");
 		const data = map.get(key);
 		const newData = {
-			oggAsset: data?.oggAsset ?? isOgg ? asset : undefined,
-			m4aAsset: data?.m4aAsset ?? !isOgg ? asset : undefined
+			oggData: data?.oggData ?? isOgg ? audioData : undefined,
+			m4aData: data?.m4aData ?? !isOgg ? audioData : undefined
 		};
 		map.set(key, newData);
 	}
 
-	function createAsset(name: string, srcAsset: AudioDataParameter, ext: string): AudioDataParameter {
+	function createAudioDataFrom(name: string, src: AudioDataParameter, ext: string): AudioDataParameter {
 		return {
 			name,
-			url: srcAsset.url.replace(/\.[^/.]+$/, ext),
-			path: srcAsset.path.replace(/\.[^/.]+$/, ext),
+			url: src.url.replace(/\.[^/.]+$/, ext),
+			path: src.path.replace(/\.[^/.]+$/, ext),
 			size: 0, // setAudioBinary() で ffmpeg.readFile() した時に設定する
 		};
 	}
