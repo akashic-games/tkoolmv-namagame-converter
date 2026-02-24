@@ -82,13 +82,13 @@ window.addEventListener("load", () => {
 			for (const audioData of complementAudioList) {
 				await withFfmpegInstance(async (ffmpeg) => {
 					const isOgg = /\.ogg$/.test(audioData.path);
-					const assetName = isOgg ? audioData.name.replace(".ogg", ".m4a") : audioData.name.replace(".m4a", ".ogg");					
+					const dataName = isOgg ? audioData.name.replace(".ogg", ".m4a") : audioData.name.replace(".m4a", ".ogg");					
 					const ffmpegArgs = isOgg
-						? ["-i", audioData.name, "-map", "a", "-strict", "2", FFMPEG_PREFIX + assetName]
-						: ["-i", audioData.name, "-map", "a", "-acodec", "libvorbis", FFMPEG_PREFIX + assetName]
+						? ["-i", audioData.name, "-map", "a", "-strict", "2", FFMPEG_PREFIX + dataName]
+						: ["-i", audioData.name, "-map", "a", "-acodec", "libvorbis", FFMPEG_PREFIX + dataName]
 
 					const ext = isOgg ? ".m4a" : ".ogg";
-					const data = createAudioDataFrom(assetName, audioData, ext);
+					const data = createAudioDataFrom(dataName, audioData, ext);
 					await ffmpeg.writeFile(audioData.name, await FFmpegUtil.fetchFile(audioData.url));
 					await generateAudioAsset(data, ffmpeg, ffmpegArgs, true);
 				});
@@ -129,18 +129,18 @@ window.addEventListener("load", () => {
 		return complementAudioList;
 	}
 
-	async function setAudioBinary(asset: AudioDataParameter, ffmpeg: any, isComplement?: boolean): Promise<void> {
-		let audioBinary: Uint8Array = await ffmpeg.readFile(FFMPEG_PREFIX + asset.name);
+	async function setAudioBinary(data: AudioDataParameter, ffmpeg: any, isComplement?: boolean): Promise<void> {
+		let audioBinary: Uint8Array = await ffmpeg.readFile(FFMPEG_PREFIX + data.name);
 		if (isComplement) {
-			// 補完した asset は作成時にサイズが設定されていないので、読み込んだ後に設定
-			asset.size = audioBinary.byteLength;
+			// 補完した data は作成時にサイズが設定されていないので、読み込んだ後に設定
+			data.size = audioBinary.byteLength;
 		}
-		if (!isComplement && asset.size <= audioBinary.byteLength) {
+		if (!isComplement && data.size <= audioBinary.byteLength) {
 			// 圧縮できなかったことをログに残して、元のデータをそのまま使うように
-			console.log(`can not compress audio: ${asset.name}, before: ${asset.size}, after: ${audioBinary.byteLength}`);
-			audioBinary = await ffmpeg.readFile(asset.name);
+			console.log(`can not compress audio: ${data.name}, before: ${data.size}, after: ${audioBinary.byteLength}`);
+			audioBinary = await ffmpeg.readFile(data.name);
 		}
-		await (window as any).tkoolmvApi.setAudioBinary(gameDistDirPath, asset.path, audioBinary);
+		await (window as any).tkoolmvApi.setAudioBinary(gameDistDirPath, data.path, audioBinary);
 	}
 
 	function registerComplementData(map: Map<string, ComplementAudioData>, audioData: AudioDataParameter): void {
