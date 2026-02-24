@@ -12,7 +12,7 @@ interface ComplementAudioData {
 
 // これらのモジュールはこのスクリプトファイルの呼び出し元である index.html で読み込まれている前提
 /* eslint-disable @typescript-eslint/naming-convention */
-declare const FFmpegUtil, FFmpegWASM: any;
+declare const FFmpegUtil: any;
 const FFMPEG_PREFIX = "ffmpeg_audio_";
 
 window.addEventListener("load", () => {
@@ -43,25 +43,6 @@ window.addEventListener("load", () => {
 		errorMessageArea.innerHTML = "";
 		usePluginConverterCheckbox.disabled = false;
 		usePluginConverterCheckbox.checked = false;
-	}
-
-	let useFfmpegCount = 0;
-	let ffmpeg = new FFmpegWASM.FFmpeg();
-	async function withFfmpegInstance<T>(func: (ffmpeg: any) => Promise<T>): Promise<T> {
-		if (useFfmpegCount === 0) {
-			await ffmpeg.load({
-				coreURL: "./ffmpeg-core/ffmpeg-core.js"
-			});
-		}
-		try {
-			return await func(ffmpeg);
-		} finally {
-			useFfmpegCount = (useFfmpegCount + 1) % 15; 
-			// 1回のFFmpegインスタンスで処理できるファイル数に制限があるため、分割して処理する
-			if (useFfmpegCount === 0) {
-				ffmpeg.terminate();
-			}
-		}
 	}
 
 	// 対象ディレクトリ中の全音声ファイルを圧縮する
