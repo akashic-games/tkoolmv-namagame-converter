@@ -52,7 +52,7 @@ window.addEventListener("load", () => {
 			const audioDataList: AudioDataParameter[] = await (window as any).tkoolmvApi.getAudioData(gameSrcDirPath);
 			const complementMap = new Map<string, ComplementAudioData>();
 			for (const audioData of audioDataList) { 
-				await withFfmpegInstance(async (ffmpeg) => {
+				await withFFmpegInstance(async (ffmpeg) => {
 					await ffmpeg.writeFile(audioData.name, await FFmpegUtil.fetchFile(audioData.url));
 					await generateAudioAsset(audioData, ffmpeg);
 					registerComplementData(complementMap, audioData);
@@ -61,15 +61,20 @@ window.addEventListener("load", () => {
 
 			const complementAudioList =  collectLackingAudio(complementMap);
 			for (const audioData of complementAudioList) {
-				await withFfmpegInstance(async (ffmpeg) => {
+				await withFFmpegInstance(async (ffmpeg) => {
 					const isOgg = /\.ogg$/.test(audioData.path);
-					const dataName = isOgg ? audioData.name.replace(".ogg", ".m4a") : audioData.name.replace(".m4a", ".ogg");					
+					const dataName = isOgg ? audioData.name.replace(/\.ogg$/, ".m4a") : audioData.name.replace(/\.m4a$/, ".ogg");
 					const ffmpegArgs = isOgg
 						? ["-i", audioData.name, "-map", "a", "-strict", "2", FFMPEG_PREFIX + dataName]
 						: ["-i", audioData.name, "-map", "a", "-acodec", "libvorbis", FFMPEG_PREFIX + dataName]
 
 					const ext = isOgg ? ".m4a" : ".ogg";
-					const data = createAudioDataFrom(dataName, audioData, ext);
+					const data = {
+						name: dataName,
+						url: audioData.url.replace(/\.[^/.]+$/, ext),
+						path: audioData.path.replace(/\.[^/.]+$/, ext),
+						size: 0, // setAudioBinary() で ffmpeg.readFile() した時に設定する
+					};
 					await ffmpeg.writeFile(audioData.name, await FFmpegUtil.fetchFile(audioData.url));
 					await generateAudioAsset(data, ffmpeg, ffmpegArgs, true);
 				});
@@ -80,7 +85,7 @@ window.addEventListener("load", () => {
 		}
 	}
 
-	async function generateAudioAsset(audioData: AudioDataParameter, ffmpeg: any, ffmpegArgs?: string[], isComplement?: boolean): Promise<void> {
+	async function generateAudioAsset(audioData: AudioDataParameter, ffmpeg: FFmpegInstance, ffmpegArgs?: string[], isComplement?: boolean): Promise<void> {
 		try {
 			// 再生時間が非常に短い(サイズが小さい)oggファイルは、圧縮処理によって一部環境で再生できなくなることがあるため、処理を分けている
 			if (audioData.size < 10000 && /\.ogg$/.test(audioData.name)) {
@@ -91,7 +96,18 @@ window.addEventListener("load", () => {
 				const args = ffmpegArgs ?? ["-i", audioData.name, "-ab", "24k", "-ar", "22050", "-ac", "1", FFMPEG_PREFIX + audioData.name];
 				await ffmpeg.exec(args);
 			}
-			await setAudioBinary(audioData, ffmpeg, isComplement);
+
+			let audioBinary = await ffmpeg.readFile(FFMPEG_PREFIX + audioData.name);
+			if (isComplement) {
+				// 補完した data は作成時にサイズが設定されていないので、読み込んだ後に設定
+				audioData.size = audioBinary.byteLength;
+			}
+			if (!isComplement && audioData.size <= audioBinary.byteLength) {
+				// 圧縮できなかったことをログに残して、元のデータをそのまま使うように
+				console.log(`can not compress audio: ${audioData.name}, before: ${audioData.size}, after: ${audioBinary.byteLength}`);
+				audioBinary = await ffmpeg.readFile(audioData.name);
+			}
+			await (window as any).tkoolmvApi.setAudioBinary(gameDistDirPath, audioData.path, audioBinary);
 		} catch (err) {
 			console.log(err);
 			throw err;
@@ -110,20 +126,6 @@ window.addEventListener("load", () => {
 		return complementAudioList;
 	}
 
-	async function setAudioBinary(data: AudioDataParameter, ffmpeg: any, isComplement?: boolean): Promise<void> {
-		let audioBinary: Uint8Array = await ffmpeg.readFile(FFMPEG_PREFIX + data.name);
-		if (isComplement) {
-			// 補完した data は作成時にサイズが設定されていないので、読み込んだ後に設定
-			data.size = audioBinary.byteLength;
-		}
-		if (!isComplement && data.size <= audioBinary.byteLength) {
-			// 圧縮できなかったことをログに残して、元のデータをそのまま使うように
-			console.log(`can not compress audio: ${data.name}, before: ${data.size}, after: ${audioBinary.byteLength}`);
-			audioBinary = await ffmpeg.readFile(data.name);
-		}
-		await (window as any).tkoolmvApi.setAudioBinary(gameDistDirPath, data.path, audioBinary);
-	}
-
 	function registerComplementData(map: Map<string, ComplementAudioData>, audioData: AudioDataParameter): void {
 		const isOgg = /\.ogg$/.test(audioData.name);
 		const key = audioData.name.replace(/^(.+)\..+$/, "$1");
@@ -133,15 +135,6 @@ window.addEventListener("load", () => {
 			m4aData: data?.m4aData ?? !isOgg ? audioData : undefined
 		};
 		map.set(key, newData);
-	}
-
-	function createAudioDataFrom(name: string, src: AudioDataParameter, ext: string): AudioDataParameter {
-		return {
-			name,
-			url: src.url.replace(/\.[^/.]+$/, ext),
-			path: src.path.replace(/\.[^/.]+$/, ext),
-			size: 0, // setAudioBinary() で ffmpeg.readFile() した時に設定する
-		};
 	}
 
 	let gameZip: Buffer | null = null;
