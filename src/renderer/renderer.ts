@@ -1,3 +1,5 @@
+import { withFFmpegInstance } from "./ffmpegInstance";
+
 interface AudioDataParameter {
 	name: string;
 	url: string;
