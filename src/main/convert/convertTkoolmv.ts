@@ -333,3 +333,27 @@ export function setAudioBinary(audioDistPath: string, binary: Uint8Array): void 
 	}
 	fs.writeFileSync(audioDistPath, binary);
 }
+
+// game.json のaudioアセットの extensions を更新する
+// 拡張子が違う音声ファイルを新規生成した場合に、元の拡張子と新しい拡張子の両方を extensions に含めるために使用する
+export function modifyGameJsonAudioExtensions(gameDirPath: string, audioPath: string): void {
+	const gameJsonPath = path.join(gameDirPath, "game.json");
+	// game.json の動的読み込みのため、require の lint エラーを抑止
+	/* eslint-disable @typescript-eslint/no-var-requires */
+	const gameJson: any = require(gameJsonPath);
+	const extname = path.extname(audioPath);
+	const assetPath = path.relative(gameDirPath, audioPath).replace(extname, "").replace(/\\/g, "/");
+	const asset = gameJson.assets[assetPath];
+	if (!asset) {
+		throw new Error(`Not found asset: ${assetPath}`);
+	}
+	if (asset.type !== "audio") {
+		throw new Error(`Asset is not audio type: ${assetPath}`);
+	}
+	if (!asset.hint || !asset.hint.extensions) {
+		asset.hint = { extensions: [extname] };
+	} else if (!asset.hint.extensions.includes(extname)) {
+		asset.hint.extensions.push(extname);
+	}
+	fs.writeFileSync(gameJsonPath, JSON.stringify(gameJson, null, 2));
+}

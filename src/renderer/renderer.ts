@@ -67,8 +67,8 @@ window.addEventListener("load", () => {
 					const isOgg = /\.ogg$/.test(audioData.path);
 					const dataName = isOgg ? audioData.name.replace(/\.ogg$/, ".m4a") : audioData.name.replace(/\.m4a$/, ".ogg");
 					const ffmpegArgs = isOgg
-						? ["-i", audioData.name, "-map", "a", "-strict", "2", FFMPEG_PREFIX + dataName]
-						: ["-i", audioData.name, "-map", "a", "-acodec", "libvorbis", FFMPEG_PREFIX + dataName]
+						? ["-i", audioData.name, "-map", "a", "-strict", "2", "-ab", "64k", "-ar", "44100", "-ac", "1", FFMPEG_PREFIX + dataName]
+						: ["-i", audioData.name, "-map", "a", "-acodec", "libvorbis", "-ab", "64k", "-ar", "44100", "-ac", "1", FFMPEG_PREFIX + dataName]
 
 					const ext = isOgg ? ".m4a" : ".ogg";
 					const data = {

@@ -7,7 +7,7 @@ import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from "electron";
 import * as log from "electron-log";
 import { autoUpdater } from "electron-updater";
 import * as sh from "shelljs";
-import { getAssetsSize, convertTkoolmv, getAudioData, setAudioBinary } from "./convert/convertTkoolmv";
+import { getAssetsSize, convertTkoolmv, getAudioData, setAudioBinary, modifyGameJsonAudioExtensions } from "./convert/convertTkoolmv";
 import type { PlaygroundServer } from "./playground/createServer";
 import { createPlaygroundServer, getGameContentUrl } from "./playground/createServer";
 import { createZip } from "./util/createZip";
@@ -116,7 +116,10 @@ ipcMain.handle("set-audio-binary", (_event, distDirPath, filePath, binary) => {
 	if (path.relative(gameBaseDirPath, distDirPath).indexOf("..") !== -1) {
 		throw new Error(`${distDirPath} is not sub directory of ${gameBaseDirPath}`);
 	}
-	setAudioBinary(path.join(distDirPath, "assets/audio", filePath), binary);
+	const audioFilePath = path.join(distDirPath, "assets/audio", filePath);
+	setAudioBinary(audioFilePath, binary);
+	// 新規に生成した音声ファイルの拡張子が元の拡張子と異なる場合、game.json の audio アセットの extensions に両方の拡張子を含めるようにする
+	modifyGameJsonAudioExtensions(distDirPath, audioFilePath);
 });
 
 ipcMain.handle("generate-nama-game-data", async (_event, distDirPath) => {
